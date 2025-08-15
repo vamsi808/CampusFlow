@@ -35,8 +35,18 @@ const profileSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
+const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 const avatarSchema = z.object({
-  avatarUrl: z.string().url('Please enter a valid image URL.').or(z.literal('')),
+  avatarFile: z
+    .any()
+    .refine((files) => files?.length == 1, "Image is required.")
+    .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 4MB.`)
+    .refine(
+      (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
+      ".jpg, .jpeg, .png and .webp files are accepted."
+    ),
 });
 
 
@@ -61,10 +71,7 @@ export default function ProfilePage() {
   });
 
   const avatarForm = useForm<AvatarFormValues>({
-      resolver: zodResolver(avatarSchema),
-      values: {
-          avatarUrl: user?.avatarUrl || '',
-      }
+      resolver: zodResolver(avatarSchema)
   });
 
   React.useEffect(() => {
@@ -79,11 +86,8 @@ export default function ProfilePage() {
             fullName: user.fullName || '',
             email: user.email || '',
         });
-        avatarForm.reset({
-            avatarUrl: user.avatarUrl || '',
-        });
     }
-  }, [user, profileForm, avatarForm]);
+  }, [user, profileForm]);
 
 
   if (isLoading || !user) {
@@ -106,12 +110,22 @@ export default function ProfilePage() {
   };
 
   const onAvatarSubmit = async (data: AvatarFormValues) => {
-    try {
-        await updateUser({ avatarUrl: data.avatarUrl });
-        toast({ title: "Avatar Updated", description: "Your profile picture has been changed." });
-        setAvatarDialogOpen(false);
-    } catch (error) {
-        toast({ variant: 'destructive', title: "Update Failed", description: (error as Error).message });
+    const file = data.avatarFile[0];
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+        const avatarUrl = reader.result as string;
+        try {
+            await updateUser({ avatarUrl });
+            toast({ title: "Avatar Updated", description: "Your profile picture has been changed." });
+            setAvatarDialogOpen(false);
+            avatarForm.reset();
+        } catch (error) {
+            toast({ variant: 'destructive', title: "Update Failed", description: (error as Error).message });
+        }
+    };
+    reader.onerror = () => {
+        toast({ variant: 'destructive', title: "File Read Error", description: "Could not read the selected file." });
     }
   };
 
@@ -141,21 +155,25 @@ export default function ProfilePage() {
                             <DialogContent>
                                 <DialogHeader>
                                     <DialogTitle>Change Profile Picture</DialogTitle>
-                                    <DialogDescription>Enter a new image URL for your avatar.</DialogDescription>
+                                    <DialogDescription>Upload a new image for your avatar.</DialogDescription>
                                 </DialogHeader>
                                 <Form {...avatarForm}>
                                     <form onSubmit={avatarForm.handleSubmit(onAvatarSubmit)} className="space-y-4">
-                                        <FormField control={avatarForm.control} name="avatarUrl" render={({ field }) => (
+                                        <FormField control={avatarForm.control} name="avatarFile" render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Image URL</FormLabel>
+                                                <FormLabel>New Avatar Image</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="https://example.com/image.png" {...field} />
+                                                    <Input 
+                                                        type="file" 
+                                                        accept="image/png, image/jpeg, image/webp"
+                                                        onChange={(e) => field.onChange(e.target.files)}
+                                                    />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )} />
                                         <DialogFooter>
-                                            <Button type="button" variant="outline" onClick={() => setAvatarDialogOpen(false)}>Cancel</Button>
+                                            <Button type="button" variant="outline" onClick={() => {setAvatarDialogOpen(false); avatarForm.reset()}}>Cancel</Button>
                                             <Button type="submit">Save</Button>
                                         </DialogFooter>
                                     </form>
