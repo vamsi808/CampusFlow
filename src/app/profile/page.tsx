@@ -58,7 +58,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [isProfileDialogOpen, setProfileDialogOpen] = React.useState(false);
   const [isAvatarDialogOpen, setAvatarDialogOpen] = React.useState(false);
-  
+
   const reservationsWithDetails = React.useMemo(() => {
     if (!user) return [];
     return userReservations(user.id).map(res => {
@@ -126,15 +126,6 @@ export default function ProfilePage() {
     }
   }, [user, profileForm]);
 
-  if (isLoading || !user) {
-    return (
-        <div className="space-y-8">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-64 w-full" />
-        </div>
-    );
-  }
-  
   const onProfileSubmit = async (data: ProfileFormValues) => {
     try {
         await updateUser(data);
@@ -164,7 +155,7 @@ export default function ProfilePage() {
         toast({ variant: 'destructive', title: "File Read Error", description: "Could not read the selected file." });
     }
   };
-
+  
   const getRoleDescription = () => {
     if (user.role === 'student' && user.yearOfStudy) {
         return `${user.yearOfStudy}`;
@@ -176,6 +167,16 @@ export default function ProfilePage() {
   };
   
   const hasBookings = reservationsWithDetails.length > 0;
+  
+  if (isLoading || !user) {
+    return (
+        <div className="space-y-8">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-64 w-full" />
+        </div>
+    );
+  }
+
   const userTotalBookings = userReservations(user.id).length;
   const userActiveBookings = userReservations(user.id).filter(r => !isPast(r.endTime)).length;
 

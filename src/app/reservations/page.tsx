@@ -9,7 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { userReservations, allResources } from "@/lib/data";
+import { allBookings, allResources } from "@/lib/data";
 import { format } from "date-fns";
 import { isPast } from "date-fns";
 import Link from "next/link";
@@ -17,7 +17,9 @@ import { MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function ReservationsPage() {
-  const reservationsWithDetails = userReservations.map(res => {
+  // In a real app, you would get the current user's ID and filter reservations.
+  // For this example, we'll just show all bookings for simplicity in this view.
+  const reservationsWithDetails = allBookings.map(res => {
     const resource = allResources.find(r => r.id === res.resourceId);
     return { ...res, resourceName: resource?.name || "Unknown Resource" };
   });

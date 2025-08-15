@@ -31,6 +31,33 @@ export const allBookings: Booking[] = [
     startTime: set(today, { hours: 9, minutes: 0, seconds: 0, milliseconds: 0 }),
     endTime: set(today, { hours: 13, minutes: 0, seconds: 0, milliseconds: 0 }),
   },
+  {
+    id: 'user-res-1',
+    resourceId: 'lib-sr-2',
+    userId: 'currentUser',
+    userName: 'Jane Doe',
+    title: 'My Upcoming Presentation Prep',
+    startTime: addHours(new Date(), 2),
+    endTime: addHours(new Date(), 4),
+  },
+  {
+    id: 'user-res-2',
+    resourceId: 'art-studio-1',
+    userId: 'currentUser',
+    userName: 'Jane Doe',
+    title: 'Ceramics Time',
+    startTime: subDays(new Date(), 1),
+    endTime: subDays(new Date(), 1),
+  },
+  {
+    id: 'user-res-3',
+    resourceId: 'rec-tennis-1',
+    userId: 'currentUser',
+    userName: 'Jane Doe',
+    title: 'Tennis practice',
+    startTime: addHours(new Date(), 20),
+    endTime: addHours(new Date(), 21),
+  }
 ];
 
 export let allResources: Resource[] = [
@@ -113,49 +140,31 @@ export let allResources: Resource[] = [
 export const resourceTypes = [...new Set(allResources.map(r => r.type))];
 export const locations = [...new Set(allResources.map(r => r.location))];
 
+// This function now correctly filters bookings for a specific user
+export const userReservations = (userId: string): Booking[] => {
+  // In a real app, you'd fetch this from a database.
+  // For now, we filter the mock data. 
+  // 'currentUser' is a placeholder for the logged-in user in the sample data.
+  const loggedInUserId = 'currentUser'; 
+  return allBookings.filter(b => b.userId === loggedInUserId || b.userId === userId);
+}
 
-export const userReservations: Booking[] = [
-  {
-    id: 'user-res-1',
-    resourceId: 'lib-sr-2',
-    userId: 'currentUser',
-    userName: 'Jane Doe',
-    title: 'My Upcoming Presentation Prep',
-    startTime: addHours(new Date(), 2),
-    endTime: addHours(new Date(), 4),
-  },
-  {
-    id: 'user-res-2',
-    resourceId: 'art-studio-1',
-    userId: 'currentUser',
-    userName: 'Jane Doe',
-    title: 'Ceramics Time',
-    startTime: subDays(new Date(), 1),
-    endTime: subDays(new Date(), 1),
-  },
-  {
-    id: 'user-res-3',
-    resourceId: 'rec-tennis-1',
-    userId: 'currentUser',
-    userName: 'Jane Doe',
-    title: 'Tennis practice',
-    startTime: addHours(new Date(), 20),
-    endTime: addHours(new Date(), 21),
-  }
-];
 
 // Dynamically generate notifications from user's upcoming reservations
-export const userNotifications: Notification[] = userReservations
-  .filter(res => res.startTime > new Date())
-  .map((res, index) => {
-    const resource = allResources.find(r => r.id === res.resourceId);
-    return {
-      id: `notif-${index}`,
-      title: 'Upcoming Booking',
-      description: `Your booking for ${resource?.name || 'a resource'} is in ${formatDistanceToNow(res.startTime)}.`,
-      date: new Date(),
-    };
-  });
+export const userNotifications = (userId: string): Notification[] => {
+    const reservations = userReservations(userId);
+    return reservations
+        .filter(res => res.startTime > new Date())
+        .map((res, index) => {
+            const resource = allResources.find(r => r.id === res.resourceId);
+            return {
+                id: `notif-${index}`,
+                title: 'Upcoming Booking',
+                description: `Your booking for ${resource?.name || 'a resource'} is in ${formatDistanceToNow(res.startTime)}.`,
+                date: new Date(),
+            };
+    });
+};
 
 
 export const deleteResource = (id: string) => {
