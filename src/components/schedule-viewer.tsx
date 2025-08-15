@@ -31,7 +31,6 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
   const [selectedSlot, setSelectedSlot] = React.useState<Date | null>(null);
   const [isBookingConfirmOpen, setBookingConfirmOpen] = React.useState(false);
   const [isAlternativesModalOpen, setAlternativesModalOpen] = React.useState(false);
-  const [timeSlotsState, setTimeSlotsState] = React.useState<Array<{ time: Date; isPast: boolean }>>([]);
   const [isClient, setIsClient] = React.useState(false);
 
   const { toast } = useToast();
@@ -42,25 +41,20 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
   const selectedDate = date ? startOfDay(date) : today;
 
   const timeSlots = React.useMemo(() => {
-    return eachHourOfInterval({
+    const slots = eachHourOfInterval({
       start: addHours(selectedDate, 8),
       end: addHours(selectedDate, 19),
     });
+    return slots;
   }, [selectedDate]);
-
-  React.useEffect(() => {
-    setIsClient(true);
-    setTimeSlotsState(
-      timeSlots.map(slot => ({
-        time: slot,
-        isPast: isBefore(slot, new Date()),
-      }))
-    );
-  }, [timeSlots, resource.schedule]);
 
   const bookingsForDay = React.useMemo(() => resource.schedule?.filter(
     (booking) => format(booking.startTime, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
   ) || [], [resource.schedule, selectedDate]);
+  
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
 
   const handleSlotClick = (slot: Date) => {
@@ -119,7 +113,8 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
           {!isClient && Array.from({ length: 12 }).map((_, i) => (
              <Button key={i} variant="outline" disabled={true} className="transition-all duration-200 h-9" />
           ))}
-          {isClient && timeSlotsState.map(({ time, isPast }, i) => {
+          {isClient && timeSlots.map((time, i) => {
+            const isPast = isBefore(time, new Date());
             const isBooked = bookingsForDay.some(b => isSameHour(b.startTime, time) || isWithinInterval(time, { start: b.startTime, end: b.endTime }));
             return (
               <Button
