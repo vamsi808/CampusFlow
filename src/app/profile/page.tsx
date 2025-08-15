@@ -76,25 +76,6 @@ export default function ProfilePage() {
       resolver: zodResolver(avatarSchema)
   });
 
-  React.useEffect(() => {
-    if (!isLoading && !user) {
-      router.replace('/login');
-    }
-  }, [user, isLoading, router]);
-  
-  React.useEffect(() => {
-    if (user) {
-        profileForm.reset({
-            fullName: user.fullName || '',
-            email: user.email || '',
-            studentId: user.studentId || '',
-            department: user.department || '',
-            yearOfStudy: user.yearOfStudy || '',
-            jobTitle: user.jobTitle || '',
-        });
-    }
-  }, [user, profileForm]);
-
   const reservationsWithDetails = React.useMemo(() => userReservations.map(res => {
     const resource = allResources.find(r => r.id === res.resourceId);
     return { ...res, resourceName: resource?.name || "Unknown", resourceType: resource?.type || "Unknown" };
@@ -123,6 +104,26 @@ export default function ProfilePage() {
       fill: `hsl(var(--chart-${(index % 5) + 1}))`
     }));
   }, [reservationsWithDetails]);
+
+
+  React.useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace('/login');
+    }
+  }, [user, isLoading, router]);
+  
+  React.useEffect(() => {
+    if (user) {
+        profileForm.reset({
+            fullName: user.fullName || '',
+            email: user.email || '',
+            studentId: user.studentId || '',
+            department: user.department || '',
+            yearOfStudy: user.yearOfStudy || '',
+            jobTitle: user.jobTitle || '',
+        });
+    }
+  }, [user, profileForm]);
 
   if (isLoading || !user) {
     return (
@@ -346,15 +347,17 @@ export default function ProfilePage() {
                         <CardDescription>Your most frequently booked resource types.</CardDescription>
                     </CardHeader>
                     <CardContent className="flex items-center justify-center">
-                         <ChartRoot config={{
-                            count: { label: 'Bookings' },
-                            ...resourceTypeData.reduce((acc, cur) => ({...acc, [cur.name]: {label: cur.name, color: cur.fill}}), {})
-                         }} className="h-[200px] w-[200px]">
-                             <ChartPieRoot>
-                                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                                <ChartPie data={resourceTypeData} dataKey="count" nameKey="name" innerRadius={50} />
-                             </ChartPieRoot>
-                         </ChartRoot>
+                         <div className="w-full h-full max-w-[200px] aspect-square">
+                             <ChartRoot config={{
+                                count: { label: 'Bookings' },
+                                ...resourceTypeData.reduce((acc, cur) => ({...acc, [cur.name]: {label: cur.name, color: cur.fill}}), {})
+                             }} className="h-full w-full">
+                                 <ChartPieRoot>
+                                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                                    <ChartPie data={resourceTypeData} dataKey="count" nameKey="name" innerRadius={50} />
+                                 </ChartPieRoot>
+                             </ChartRoot>
+                         </div>
                     </CardContent>
                 </Card>
             </div>
@@ -406,3 +409,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
