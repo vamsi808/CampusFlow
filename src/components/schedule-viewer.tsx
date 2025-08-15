@@ -5,22 +5,22 @@ import * as React from 'react';
 import {
   addHours,
   eachHourOfInterval,
-  endOfDay,
-  format,
   isBefore,
   isSameHour,
+  format,
   startOfDay,
   isWithinInterval,
 } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Card } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { CalendarIcon, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import type { Resource } from '@/lib/types';
 import { AlternativeResourcesModal } from './alternative-resources-modal';
+import { useAuth } from '@/hooks/use-auth';
+import { addBooking } from '@/lib/data';
+import { useRouter } from 'next/navigation';
 
 interface ScheduleViewerProps {
   resource: Resource;
@@ -31,21 +31,28 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
   const [selectedSlot, setSelectedSlot] = React.useState<Date | null>(null);
   const [isBookingConfirmOpen, setBookingConfirmOpen] = React.useState(false);
   const [isAlternativesModalOpen, setAlternativesModalOpen] = React.useState(false);
-  const [hydrated, setHydrated] = React.useState(false);
-  
-  const { toast } = useToast();
+  const [timeSlotsState, setTimeSlotsState] = React.useState<Array<{ time: Date; isPast: boolean }>>([]);
 
-  React.useEffect(() => {
-    setHydrated(true);
-  }, []);
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const router = useRouter();
 
   const today = startOfDay(new Date());
   const selectedDate = date ? startOfDay(date) : today;
 
-  const timeSlots = eachHourOfInterval({
-    start: addHours(selectedDate, 8),
-    end: addHours(selectedDate, 19),
-  });
+  React.useEffect(() => {
+    const timeSlots = eachHourOfInterval({
+      start: addHours(selectedDate, 8),
+      end: addHours(selectedDate, 19),
+    });
+
+    setTimeSlotsState(
+      timeSlots.map(slot => ({
+        time: slot,
+        isPast: isBefore(slot, new Date()),
+      }))
+    );
+  }, [selectedDate]);
 
   const bookingsForDay = resource.schedule?.filter(
     (booking) => format(booking.startTime, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
@@ -53,8 +60,8 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
 
   const handleSlotClick = (slot: Date) => {
     setSelectedSlot(slot);
-    const isBooked = bookingsForDay.some(b => 
-        isSameHour(b.startTime, slot) || 
+    const isBooked = bookingsForDay.some(b =>
+        isSameHour(b.startTime, slot) ||
         isWithinInterval(slot, { start: b.startTime, end: b.endTime })
     );
 
@@ -66,13 +73,27 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
   };
 
   const handleBookingConfirm = () => {
+    if (!user || !selectedSlot) return;
+
+    addBooking({
+      resourceId: resource.id,
+      userId: user.id,
+      userName: user.fullName || user.username,
+      startTime: selectedSlot,
+      endTime: addHours(selectedSlot, 1),
+      title: `Booking for ${user.fullName || user.username}`,
+    });
+
     toast({
       title: "Booking Successful!",
       description: `You have booked ${resource.name} for ${format(selectedSlot!, 'MMM d, h:mm a')}.`,
     });
     setBookingConfirmOpen(false);
     setSelectedSlot(null);
+    // Force re-render to show updated schedule
+    router.refresh();
   };
+
 
   return (
     <div className="flex flex-col md:flex-row gap-6">
@@ -91,27 +112,20 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
           Available Slots for {format(selectedDate, 'MMMM d, yyyy')}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {timeSlots.map((slot, i) => {
-            if (!hydrated) {
-              return (
-                <Button key={i} variant="outline" disabled={true} className="transition-all duration-200">
-                  {format(slot, 'h:mm a')}
-                </Button>
-              );
-            }
-            
-            const isPast = isBefore(slot, new Date());
-            const isBooked = bookingsForDay.some(b => isSameHour(b.startTime, slot) || isWithinInterval(slot, { start: b.startTime, end: b.endTime }));
-
+          {timeSlotsState.length === 0 && Array.from({ length: 12 }).map((_, i) => (
+             <Button key={i} variant="outline" disabled={true} className="transition-all duration-200 h-9" />
+          ))}
+          {timeSlotsState.map(({ time, isPast }, i) => {
+            const isBooked = bookingsForDay.some(b => isSameHour(b.startTime, time) || isWithinInterval(time, { start: b.startTime, end: b.endTime }));
             return (
               <Button
                 key={i}
                 variant={isBooked ? "destructive" : "outline"}
                 disabled={isPast || isBooked}
-                onClick={() => handleSlotClick(slot)}
+                onClick={() => handleSlotClick(time)}
                 className="transition-all duration-200"
               >
-                {format(slot, 'h:mm a')}
+                {format(time, 'h:mm a')}
               </Button>
             );
           })}
@@ -122,7 +136,7 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
             <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-muted"></span> Past</div>
         </div>
       </div>
-      
+
       {/* Booking Confirmation Dialog */}
       <Dialog open={isBookingConfirmOpen} onOpenChange={setBookingConfirmOpen}>
         <DialogContent>
@@ -139,11 +153,13 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBookingConfirmOpen(false)}>Cancel</Button>
-            <Button onClick={handleBookingConfirm}>Confirm Booking</Button>
+            <Button onClick={handleBookingConfirm} disabled={!user}>
+                {!user ? "Please log in to book" : "Confirm Booking"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* AI Alternatives Modal */}
       {selectedSlot && (
         <AlternativeResourcesModal

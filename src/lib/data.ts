@@ -3,7 +3,7 @@ import { addHours, set, subDays, formatDistanceToNow } from 'date-fns';
 
 const today = new Date();
 
-export const allBookings: Booking[] = [
+export let allBookings: Booking[] = [
   {
     id: 'booking1',
     resourceId: 'lib-sr-1',
@@ -157,7 +157,7 @@ export const userNotifications = (userId: string): Notification[] => {
         .map((res, index) => {
             const resource = allResources.find(r => r.id === res.resourceId);
             return {
-                id: `notif-${index}`,
+                id: `notif-${res.id}`,
                 title: 'Upcoming Booking',
                 description: `Your booking for ${resource?.name || 'a resource'} is in ${formatDistanceToNow(res.startTime)}.`,
                 date: new Date(),
@@ -176,4 +176,21 @@ export const addResource = (resource: Omit<Resource, 'schedule'>) => {
     id: `new-${Math.random().toString(36).substr(2, 9)}`,
   };
   allResources.unshift(newResource);
+}
+
+export const addBooking = (booking: Omit<Booking, 'id'>) => {
+  const newBooking: Booking = {
+    ...booking,
+    id: `booking-${Date.now()}`
+  };
+  allBookings.push(newBooking);
+
+  // also update the resource's schedule
+  const resource = allResources.find(r => r.id === newBooking.resourceId);
+  if (resource) {
+    if (!resource.schedule) {
+      resource.schedule = [];
+    }
+    resource.schedule.push(newBooking);
+  }
 }
