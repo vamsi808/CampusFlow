@@ -58,11 +58,14 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [isProfileDialogOpen, setProfileDialogOpen] = React.useState(false);
   const [isAvatarDialogOpen, setAvatarDialogOpen] = React.useState(false);
-
-  const reservationsWithDetails = React.useMemo(() => userReservations.map(res => {
-    const resource = allResources.find(r => r.id === res.resourceId);
-    return { ...res, resourceName: resource?.name || "Unknown", resourceType: resource?.type || "Unknown" };
-  }), []);
+  
+  const reservationsWithDetails = React.useMemo(() => {
+    if (!user) return [];
+    return userReservations(user.id).map(res => {
+        const resource = allResources.find(r => r.id === res.resourceId);
+        return { ...res, resourceName: resource?.name || "Unknown", resourceType: resource?.type || "Unknown" };
+    });
+  }, [user]);
   
   const monthlyBookingData = React.useMemo(() => {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -173,6 +176,9 @@ export default function ProfilePage() {
   };
   
   const hasBookings = reservationsWithDetails.length > 0;
+  const userTotalBookings = userReservations(user.id).length;
+  const userActiveBookings = userReservations(user.id).filter(r => !isPast(r.endTime)).length;
+
 
   return (
     <div className="grid gap-8 md:grid-cols-3">
@@ -311,11 +317,11 @@ export default function ProfilePage() {
                 <CardContent className="space-y-4">
                     <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Total Bookings</span>
-                        <span className="font-bold">{userReservations.length}</span>
+                        <span className="font-bold">{userTotalBookings}</span>
                     </div>
                      <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Active Bookings</span>
-                        <span className="font-bold">{userReservations.filter(r => !isPast(r.endTime)).length}</span>
+                        <span className="font-bold">{userActiveBookings}</span>
                     </div>
                 </CardContent>
             </Card>
@@ -330,17 +336,19 @@ export default function ProfilePage() {
                     </CardHeader>
                     <CardContent>
                         {hasBookings ? (
-                            <ChartRoot config={{
-                                total: { label: 'Bookings', color: "hsl(var(--chart-1))" },
-                            }} className="h-[200px]">
-                                <ChartBarRoot data={monthlyBookingData}>
-                                    <ChartGrid vertical={false} />
-                                    <ChartXAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
-                                    <ChartYAxis hide={true} />
-                                    <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                                    <ChartBar dataKey="total" radius={8} />
-                                </ChartBarRoot>
-                            </ChartRoot>
+                            <div className="w-full h-[200px]">
+                                <ChartRoot config={{
+                                    total: { label: 'Bookings', color: "hsl(var(--chart-1))" },
+                                }} className="h-full w-full">
+                                    <ChartBarRoot data={monthlyBookingData}>
+                                        <ChartGrid vertical={false} />
+                                        <ChartXAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
+                                        <ChartYAxis hide={true} />
+                                        <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                                        <ChartBar dataKey="total" radius={8} />
+                                    </ChartBarRoot>
+                                </ChartRoot>
+                            </div>
                         ) : (
                             <div className="h-[200px] flex items-center justify-center text-muted-foreground">
                                 No booking data yet.
@@ -422,3 +430,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
