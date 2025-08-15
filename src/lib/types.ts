@@ -1,4 +1,5 @@
 
+
 export interface Resource {
   id: string;
   name: string;
@@ -31,4 +32,7 @@ export interface User {
   id: string;
   username: string;
   role: 'student' | 'faculty' | 'admin';
+  fullName?: string;
+  email?: string;
+  dateJoined?: string;
 }

@@ -12,12 +12,17 @@ interface User {
   username: string;
   role: 'student' | 'faculty' | 'admin';
   password? : string; // In a real app, this would be a hash
+  fullName?: string;
+  email?: string;
+  dateJoined?: string;
 }
+
+type SignupData = Omit<User, 'id' | 'dateJoined'>;
 
 interface AuthContextType {
   user: User | null;
   login: (username: string, password: string) => Promise<void>;
-  signup: (username: string, password: string, role: 'student' | 'faculty') => Promise<void>;
+  signup: (data: SignupData) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -32,7 +37,7 @@ const getStoredUsers = (): User[] => {
         return JSON.parse(usersJson);
     }
     // Add default admin user if no users exist
-    const adminUser: User = { id: 'admin-user', username: 'admin', role: 'admin', password: 'admin@123' };
+    const adminUser: User = { id: 'admin-user', username: 'admin', role: 'admin', password: 'admin@123', fullName: 'Admin User', email: 'admin@campusflow.app', dateJoined: new Date().toISOString() };
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify([adminUser]));
     return [adminUser];
 }
@@ -77,19 +82,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const signup = async (username: string, password: string, role: 'student' | 'faculty'): Promise<void> => {
+  const signup = async (data: SignupData): Promise<void> => {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             const users = getStoredUsers();
-            if (users.some(u => u.username === username)) {
+            if (users.some(u => u.username === data.username)) {
                 return reject(new Error('Username is already taken.'));
             }
 
             const newUser: User = {
+                ...data,
                 id: `user-${Date.now()}`,
-                username,
-                password,
-                role,
+                dateJoined: new Date().toISOString(),
             };
 
             const updatedUsers = [...users, newUser];
