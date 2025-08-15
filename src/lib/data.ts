@@ -143,10 +143,9 @@ export const locations = [...new Set(allResources.map(r => r.location))];
 // This function now correctly filters bookings for a specific user
 export const userReservations = (userId: string): Booking[] => {
   // In a real app, you'd fetch this from a database.
-  // For now, we filter the mock data. 
-  // 'currentUser' is a placeholder for the logged-in user in the sample data.
-  const loggedInUserId = 'currentUser'; 
-  return allBookings.filter(b => b.userId === loggedInUserId || b.userId === userId);
+  // For now, we filter the mock data. 'currentUser' is a placeholder for the logged-in user in the sample data.
+  // A real user ID will be passed in from the auth context.
+  return allBookings.filter(b => b.userId === userId);
 }
 
 
