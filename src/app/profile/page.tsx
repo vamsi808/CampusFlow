@@ -33,7 +33,12 @@ import { useToast } from '@/hooks/use-toast';
 const profileSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),
   email: z.string().email('Invalid email address'),
+  studentId: z.string().min(1, "ID is required"),
+  department: z.string().optional(),
+  yearOfStudy: z.string().optional(),
+  jobTitle: z.string().optional(),
 });
+
 
 const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -67,6 +72,10 @@ export default function ProfilePage() {
     values: {
       fullName: user?.fullName || '',
       email: user?.email || '',
+      studentId: user?.studentId || '',
+      department: user?.department || '',
+      yearOfStudy: user?.yearOfStudy || '',
+      jobTitle: user?.jobTitle || '',
     }
   });
 
@@ -85,6 +94,10 @@ export default function ProfilePage() {
         profileForm.reset({
             fullName: user.fullName || '',
             email: user.email || '',
+            studentId: user.studentId || '',
+            department: user.department || '',
+            yearOfStudy: user.yearOfStudy || '',
+            jobTitle: user.jobTitle || '',
         });
     }
   }, [user, profileForm]);
@@ -231,7 +244,7 @@ export default function ProfilePage() {
                         <DialogContent>
                             <DialogHeader>
                                 <DialogTitle>Edit Profile</DialogTitle>
-                                <DialogDescription>Update your personal information. Other details must be changed by an admin.</DialogDescription>
+                                <DialogDescription>Update your personal information.</DialogDescription>
                             </DialogHeader>
                              <Form {...profileForm}>
                                 <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
@@ -241,6 +254,25 @@ export default function ProfilePage() {
                                     <FormField control={profileForm.control} name="email" render={({ field }) => (
                                         <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                                     )} />
+                                    <FormField control={profileForm.control} name="studentId" render={({ field }) => (
+                                        <FormItem><FormLabel>University ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                    )} />
+                                    <FormField control={profileForm.control} name="department" render={({ field }) => (
+                                        <FormItem><FormLabel>Department</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                    )} />
+
+                                    {user.role === 'student' && (
+                                        <FormField control={profileForm.control} name="yearOfStudy" render={({ field }) => (
+                                            <FormItem><FormLabel>Year of Study</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                        )} />
+                                    )}
+
+                                    {(user.role === 'faculty' || user.role === 'admin') && (
+                                         <FormField control={profileForm.control} name="jobTitle" render={({ field }) => (
+                                            <FormItem><FormLabel>Job Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                        )} />
+                                    )}
+
                                     <DialogFooter>
                                         <Button type="button" variant="outline" onClick={() => setProfileDialogOpen(false)}>Cancel</Button>
                                         <Button type="submit">Save Changes</Button>
@@ -323,4 +355,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
