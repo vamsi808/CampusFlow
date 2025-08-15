@@ -95,6 +95,34 @@ export default function ProfilePage() {
     }
   }, [user, profileForm]);
 
+  const reservationsWithDetails = React.useMemo(() => userReservations.map(res => {
+    const resource = allResources.find(r => r.id === res.resourceId);
+    return { ...res, resourceName: resource?.name || "Unknown", resourceType: resource?.type || "Unknown" };
+  }), []);
+
+  const monthlyBookingData = React.useMemo(() => {
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthlyCounts = Array(12).fill(0).map((_, i) => ({ month: monthNames[i], total: 0 }));
+    
+    reservationsWithDetails.forEach(res => {
+        const monthIndex = getMonth(res.startTime);
+        monthlyCounts[monthIndex].total += 1;
+    });
+
+    return monthlyCounts;
+  }, [reservationsWithDetails]);
+
+  const resourceTypeData = React.useMemo(() => {
+    const typeCounts: {[key: string]: number} = {};
+    reservationsWithDetails.forEach(res => {
+        typeCounts[res.resourceType] = (typeCounts[res.resourceType] || 0) + 1;
+    });
+    return Object.entries(typeCounts).map(([type, count], index) => ({
+      name: type,
+      count: count,
+      fill: `hsl(var(--chart-${(index % 5) + 1}))`
+    }));
+  }, [reservationsWithDetails]);
 
   if (isLoading || !user) {
     return (
@@ -135,11 +163,6 @@ export default function ProfilePage() {
     }
   };
 
-  const reservationsWithDetails = userReservations.map(res => {
-    const resource = allResources.find(r => r.id === res.resourceId);
-    return { ...res, resourceName: resource?.name || "Unknown", resourceType: resource?.type || "Unknown" };
-  });
-
   const getRoleDescription = () => {
     if (user.role === 'student' && user.yearOfStudy) {
         return `${user.yearOfStudy}`;
@@ -149,31 +172,6 @@ export default function ProfilePage() {
     }
     return user.role.charAt(0).toUpperCase() + user.role.slice(1);
   };
-  
-  const monthlyBookingData = React.useMemo(() => {
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const monthlyCounts = Array(12).fill(0).map((_, i) => ({ month: monthNames[i], total: 0 }));
-    
-    reservationsWithDetails.forEach(res => {
-        const monthIndex = getMonth(res.startTime);
-        monthlyCounts[monthIndex].total += 1;
-    });
-
-    return monthlyCounts;
-  }, [reservationsWithDetails]);
-
-  const resourceTypeData = React.useMemo(() => {
-    const typeCounts: {[key: string]: number} = {};
-    reservationsWithDetails.forEach(res => {
-        typeCounts[res.resourceType] = (typeCounts[res.resourceType] || 0) + 1;
-    });
-    return Object.entries(typeCounts).map(([type, count], index) => ({
-      name: type,
-      count: count,
-      fill: `hsl(var(--chart-${(index % 5) + 1}))`
-    }));
-  }, [reservationsWithDetails]);
-
 
   return (
     <div className="grid gap-8 md:grid-cols-3">
