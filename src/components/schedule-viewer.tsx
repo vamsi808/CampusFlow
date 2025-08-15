@@ -32,6 +32,7 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
   const [isBookingConfirmOpen, setBookingConfirmOpen] = React.useState(false);
   const [isAlternativesModalOpen, setAlternativesModalOpen] = React.useState(false);
   const [timeSlotsState, setTimeSlotsState] = React.useState<Array<{ time: Date; isPast: boolean }>>([]);
+  const [isClient, setIsClient] = React.useState(false);
 
   const { toast } = useToast();
   const { user } = useAuth();
@@ -40,23 +41,27 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
   const today = startOfDay(new Date());
   const selectedDate = date ? startOfDay(date) : today;
 
-  React.useEffect(() => {
-    const timeSlots = eachHourOfInterval({
-      start: addHours(selectedDate, 8),
-      end: addHours(selectedDate, 19),
-    });
-
-    setTimeSlotsState(
-      timeSlots.map(slot => ({
-        time: slot,
-        isPast: isBefore(slot, new Date()),
-      }))
-    );
+  const timeSlots = React.useMemo(() => {
+      return eachHourOfInterval({
+          start: addHours(selectedDate, 8),
+          end: addHours(selectedDate, 19),
+      });
   }, [selectedDate]);
 
-  const bookingsForDay = resource.schedule?.filter(
+  React.useEffect(() => {
+      setIsClient(true);
+      setTimeSlotsState(
+          timeSlots.map(slot => ({
+              time: slot,
+              isPast: isBefore(slot, new Date()),
+          }))
+      );
+  }, [timeSlots, resource.schedule]);
+
+  const bookingsForDay = React.useMemo(() => resource.schedule?.filter(
     (booking) => format(booking.startTime, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
-  ) || [];
+  ) || [], [resource.schedule, selectedDate]);
+
 
   const handleSlotClick = (slot: Date) => {
     setSelectedSlot(slot);
@@ -90,7 +95,6 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
     });
     setBookingConfirmOpen(false);
     setSelectedSlot(null);
-    // Force re-render to show updated schedule
     router.refresh();
   };
 
@@ -112,10 +116,10 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
           Available Slots for {format(selectedDate, 'MMMM d, yyyy')}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {timeSlotsState.length === 0 && Array.from({ length: 12 }).map((_, i) => (
+          {!isClient && Array.from({ length: 12 }).map((_, i) => (
              <Button key={i} variant="outline" disabled={true} className="transition-all duration-200 h-9" />
           ))}
-          {timeSlotsState.map(({ time, isPast }, i) => {
+          {isClient && timeSlotsState.map(({ time, isPast }, i) => {
             const isBooked = bookingsForDay.some(b => isSameHour(b.startTime, time) || isWithinInterval(time, { start: b.startTime, end: b.endTime }));
             return (
               <Button
