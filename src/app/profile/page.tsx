@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table";
 import { allResources, userReservations } from '@/lib/data';
 import { format, formatDistanceToNow, isPast } from 'date-fns';
-import { User, Mail, Calendar, LogOut, Briefcase, Edit, Clock, BarChart2, Pencil } from 'lucide-react';
+import { User, Mail, Calendar, LogOut, Briefcase, Edit, Clock, BarChart2, Pencil, Building, GraduationCap, Award } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -134,6 +134,17 @@ export default function ProfilePage() {
     const resource = allResources.find(r => r.id === res.resourceId);
     return { ...res, resourceName: resource?.name || "Unknown" };
   });
+  
+  const getRoleDescription = () => {
+    if (user.role === 'student' && user.yearOfStudy) {
+        return `${user.yearOfStudy}`;
+    }
+    if ((user.role === 'faculty' || user.role === 'admin') && user.jobTitle) {
+        return user.jobTitle;
+    }
+    return user.role.charAt(0).toUpperCase() + user.role.slice(1);
+  };
+
 
   return (
     <div className="grid gap-8 md:grid-cols-3">
@@ -182,11 +193,15 @@ export default function ProfilePage() {
                         </Dialog>
                     </div>
                     <CardTitle>{user.fullName || user.username}</CardTitle>
-                    <CardDescription className="capitalize">{user.role}</CardDescription>
+                    <CardDescription className="capitalize">{getRoleDescription()}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <Separator />
                     <div className="space-y-3 text-sm text-muted-foreground">
+                         <div className="flex items-center gap-3">
+                            <Award className="w-4 h-4 text-primary" />
+                            <span>ID: {user.studentId || 'N/A'}</span>
+                        </div>
                         <div className="flex items-center gap-3">
                             <User className="w-4 h-4 text-primary" />
                             <span>@{user.username}</span>
@@ -195,6 +210,12 @@ export default function ProfilePage() {
                             <Mail className="w-4 h-4 text-primary" />
                             <span>{user.email || 'No email provided'}</span>
                         </div>
+                        {user.department && (
+                             <div className="flex items-center gap-3">
+                                <Building className="w-4 h-4 text-primary" />
+                                <span>{user.department}</span>
+                            </div>
+                        )}
                         <div className="flex items-center gap-3">
                             <Calendar className="w-4 h-4 text-primary" />
                             <span>Joined {user.dateJoined ? formatDistanceToNow(new Date(user.dateJoined), { addSuffix: true }) : 'recently'}</span>
@@ -210,7 +231,7 @@ export default function ProfilePage() {
                         <DialogContent>
                             <DialogHeader>
                                 <DialogTitle>Edit Profile</DialogTitle>
-                                <DialogDescription>Update your personal information.</DialogDescription>
+                                <DialogDescription>Update your personal information. Other details must be changed by an admin.</DialogDescription>
                             </DialogHeader>
                              <Form {...profileForm}>
                                 <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
@@ -302,3 +323,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

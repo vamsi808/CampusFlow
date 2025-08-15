@@ -16,6 +16,10 @@ interface User {
   email?: string;
   dateJoined?: string;
   avatarUrl?: string;
+  department?: string;
+  yearOfStudy?: string;
+  studentId?: string;
+  jobTitle?: string;
 }
 
 type SignupData = Omit<User, 'id' | 'dateJoined'>;
@@ -39,7 +43,18 @@ const getStoredUsers = (): User[] => {
         return JSON.parse(usersJson);
     }
     // Add default admin user if no users exist
-    const adminUser: User = { id: 'admin-user', username: 'admin', role: 'admin', password: 'admin@123', fullName: 'Admin User', email: 'admin@campusflow.app', dateJoined: new Date().toISOString(), avatarUrl: '' };
+    const adminUser: User = { 
+        id: 'admin-user', 
+        username: 'admin', 
+        role: 'admin', 
+        password: 'admin@123', 
+        fullName: 'Admin User', 
+        email: 'admin@campusflow.app', 
+        dateJoined: new Date().toISOString(), 
+        avatarUrl: '',
+        jobTitle: 'System Administrator',
+        studentId: '001'
+    };
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify([adminUser]));
     return [adminUser];
 }

@@ -35,4 +35,8 @@ export interface User {
   fullName?: string;
   email?: string;
   dateJoined?: string;
+  department?: string;
+  yearOfStudy?: string;
+  studentId?: string;
+  jobTitle?: string;
 }
