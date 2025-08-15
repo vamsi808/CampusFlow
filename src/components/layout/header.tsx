@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -11,6 +12,7 @@ import {
   User,
   Shield,
   LogOut,
+  UserPlus
 } from 'lucide-react';
 
 import {
@@ -61,7 +63,7 @@ export function Header() {
         </div>
 
         <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 ml-10">
-          {navLinks.map(link => (
+          {user && navLinks.map(link => (
             <Link
               key={link.href}
               href={link.href}
@@ -82,90 +84,99 @@ export function Header() {
         </nav>
 
         <div className="ml-auto flex items-center gap-4">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-primary/90"></span>
-                </span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80">
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <h4 className="font-medium leading-none">Notifications</h4>
-                  <p className="text-sm text-muted-foreground">
-                    You have {userNotifications.length} new messages.
-                  </p>
-                </div>
-                <div className="grid gap-2">
-                  {userNotifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className="grid grid-cols-[25px_1fr] items-start pb-4 last:pb-0"
-                    >
-                      <span className="flex h-2 w-2 translate-y-1 rounded-full bg-primary" />
-                      <div className="grid gap-1">
-                        <p className="text-sm font-medium">{notification.title}</p>
-                        <p className="text-sm text-muted-foreground">{notification.description}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(notification.date, { addSuffix: true })}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User avatar" />
-                  <AvatarFallback>{user ? user.username.substring(0,2).toUpperCase() : 'G'}</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              {user ? (
-                <>
-                <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.username}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                        {user.role}
+          {user ? (
+            <>
+            <Popover>
+                <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="h-5 w-5" />
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary/90"></span>
+                    </span>
+                </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                <div className="grid gap-4">
+                    <div className="space-y-2">
+                    <h4 className="font-medium leading-none">Notifications</h4>
+                    <p className="text-sm text-muted-foreground">
+                        You have {userNotifications.length} new messages.
                     </p>
                     </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log out
-                </DropdownMenuItem>
-                </>
-              ) : (
-                <DropdownMenuItem asChild>
+                    <div className="grid gap-2">
+                    {userNotifications.map((notification) => (
+                        <div
+                        key={notification.id}
+                        className="grid grid-cols-[25px_1fr] items-start pb-4 last:pb-0"
+                        >
+                        <span className="flex h-2 w-2 translate-y-1 rounded-full bg-primary" />
+                        <div className="grid gap-1">
+                            <p className="text-sm font-medium">{notification.title}</p>
+                            <p className="text-sm text-muted-foreground">{notification.description}</p>
+                            <p className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(notification.date, { addSuffix: true })}
+                            </p>
+                        </div>
+                        </div>
+                    ))}
+                    </div>
+                </div>
+                </PopoverContent>
+            </Popover>
+
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                    <AvatarImage src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User avatar" />
+                    <AvatarFallback>{user ? user.username.substring(0,2).toUpperCase() : 'G'}</AvatarFallback>
+                    </Avatar>
+                </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.username}</p>
+                        <p className="text-xs leading-none text-muted-foreground capitalize">
+                            {user.role}
+                        </p>
+                        </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={logout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Log out
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+            </>
+          ) : (
+            <div className='hidden md:flex items-center gap-2'>
+                <Button variant="outline" asChild>
                     <Link href="/login">
                         <User className="mr-2 h-4 w-4" />
-                        <span>Login</span>
+                        Login
                     </Link>
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                </Button>
+                <Button asChild>
+                    <Link href="/signup">
+                         <UserPlus className="mr-2 h-4 w-4" />
+                        Sign Up
+                    </Link>
+                </Button>
+            </div>
+          )}
+
 
           <Sheet>
             <SheetTrigger asChild>
@@ -176,28 +187,47 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="left">
                 <nav className="grid gap-6 text-lg font-medium mt-8">
-                {navLinks.map(link => (
-                    <SheetClose asChild key={link.href}>
-                        <Link
-                        href={link.href}
-                        className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
-                        >
-                            <link.icon className="h-5 w-5" />
-                            {link.label}
-                        </Link>
-                    </SheetClose>
-                ))}
-                {user?.role === 'admin' && adminLinks.map(link => (
-                     <SheetClose asChild key={link.href}>
-                        <Link
+                {user ? (
+                    <>
+                    {navLinks.map(link => (
+                        <SheetClose asChild key={link.href}>
+                            <Link
                             href={link.href}
                             className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
-                        >
-                            <link.icon className="h-5 w-5" />
-                            {link.label}
+                            >
+                                <link.icon className="h-5 w-5" />
+                                {link.label}
+                            </Link>
+                        </SheetClose>
+                    ))}
+                    {user.role === 'admin' && adminLinks.map(link => (
+                        <SheetClose asChild key={link.href}>
+                            <Link
+                                href={link.href}
+                                className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                            >
+                                <link.icon className="h-5 w-5" />
+                                {link.label}
+                            </Link>
+                        </SheetClose>
+                    ))}
+                    </>
+                ): (
+                    <>
+                    <SheetClose asChild>
+                         <Link href="/login" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                            <User className="h-5 w-5" />
+                            Login
                         </Link>
                     </SheetClose>
-                ))}
+                    <SheetClose asChild>
+                        <Link href="/signup" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                            <UserPlus className="h-5 w-5" />
+                            Sign Up
+                        </Link>
+                    </SheetClose>
+                    </>
+                )}
               </nav>
             </SheetContent>
           </Sheet>

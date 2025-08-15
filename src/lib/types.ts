@@ -1,3 +1,4 @@
+
 export interface Resource {
   id: string;
   name: string;
@@ -24,4 +25,10 @@ export interface Notification {
   title: string;
   description: string;
   date: Date;
+}
+
+export interface User {
+  id: string;
+  username: string;
+  role: 'student' | 'faculty' | 'admin';
 }
