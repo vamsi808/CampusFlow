@@ -42,20 +42,20 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
   const selectedDate = date ? startOfDay(date) : today;
 
   const timeSlots = React.useMemo(() => {
-      return eachHourOfInterval({
-          start: addHours(selectedDate, 8),
-          end: addHours(selectedDate, 19),
-      });
+    return eachHourOfInterval({
+      start: addHours(selectedDate, 8),
+      end: addHours(selectedDate, 19),
+    });
   }, [selectedDate]);
 
   React.useEffect(() => {
-      setIsClient(true);
-      setTimeSlotsState(
-          timeSlots.map(slot => ({
-              time: slot,
-              isPast: isBefore(slot, new Date()),
-          }))
-      );
+    setIsClient(true);
+    setTimeSlotsState(
+      timeSlots.map(slot => ({
+        time: slot,
+        isPast: isBefore(slot, new Date()),
+      }))
+    );
   }, [timeSlots, resource.schedule]);
 
   const bookingsForDay = React.useMemo(() => resource.schedule?.filter(
