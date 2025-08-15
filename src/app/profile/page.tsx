@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table";
 import { allResources, userReservations } from '@/lib/data';
 import { format, formatDistanceToNow, isPast } from 'date-fns';
-import { User, Mail, Calendar, LogOut, Briefcase, Edit, Clock, BarChart2 } from 'lucide-react';
+import { User, Mail, Calendar, LogOut, Briefcase, Edit, Clock, BarChart2, Pencil } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -35,20 +35,36 @@ const profileSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
+const avatarSchema = z.object({
+  avatarUrl: z.string().url('Please enter a valid image URL.').or(z.literal('')),
+});
+
+
 type ProfileFormValues = z.infer<typeof profileSchema>;
+type AvatarFormValues = z.infer<typeof avatarSchema>;
+
 
 export default function ProfilePage() {
   const { user, logout, isLoading, updateUser } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const [isDialogOpen, setDialogOpen] = React.useState(false);
+  const [isProfileDialogOpen, setProfileDialogOpen] = React.useState(false);
+  const [isAvatarDialogOpen, setAvatarDialogOpen] = React.useState(false);
 
-  const form = useForm<ProfileFormValues>({
+
+  const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     values: {
       fullName: user?.fullName || '',
       email: user?.email || '',
     }
+  });
+
+  const avatarForm = useForm<AvatarFormValues>({
+      resolver: zodResolver(avatarSchema),
+      values: {
+          avatarUrl: user?.avatarUrl || '',
+      }
   });
 
   React.useEffect(() => {
@@ -59,12 +75,15 @@ export default function ProfilePage() {
   
   React.useEffect(() => {
     if (user) {
-        form.reset({
+        profileForm.reset({
             fullName: user.fullName || '',
             email: user.email || '',
         });
+        avatarForm.reset({
+            avatarUrl: user.avatarUrl || '',
+        });
     }
-  }, [user, form]);
+  }, [user, profileForm, avatarForm]);
 
 
   if (isLoading || !user) {
@@ -76,11 +95,21 @@ export default function ProfilePage() {
     );
   }
   
-  const onSubmit = async (data: ProfileFormValues) => {
+  const onProfileSubmit = async (data: ProfileFormValues) => {
     try {
         await updateUser(data);
         toast({ title: "Profile Updated", description: "Your information has been saved." });
-        setDialogOpen(false);
+        setProfileDialogOpen(false);
+    } catch (error) {
+        toast({ variant: 'destructive', title: "Update Failed", description: (error as Error).message });
+    }
+  };
+
+  const onAvatarSubmit = async (data: AvatarFormValues) => {
+    try {
+        await updateUser({ avatarUrl: data.avatarUrl });
+        toast({ title: "Avatar Updated", description: "Your profile picture has been changed." });
+        setAvatarDialogOpen(false);
     } catch (error) {
         toast({ variant: 'destructive', title: "Update Failed", description: (error as Error).message });
     }
@@ -97,10 +126,43 @@ export default function ProfilePage() {
         <div className="md:col-span-1 space-y-6">
             <Card>
                 <CardHeader className="items-center text-center">
-                    <Avatar className="w-24 h-24 mb-4 border-2 border-primary">
-                        <AvatarImage src="https://i.pravatar.cc/300" alt={user.username} />
-                        <AvatarFallback>{user.username.substring(0,2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
+                    <div className="relative group">
+                        <Avatar className="w-24 h-24 mb-4 border-2 border-primary">
+                            <AvatarImage src={user.avatarUrl || `https://i.pravatar.cc/300?u=${user.id}`} alt={user.username} />
+                            <AvatarFallback>{user.username.substring(0,2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <Dialog open={isAvatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" size="icon" className="absolute bottom-4 right-0 rounded-full w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 hover:bg-background">
+                                    <Pencil className="w-4 h-4" />
+                                    <span className="sr-only">Edit Profile Picture</span>
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Change Profile Picture</DialogTitle>
+                                    <DialogDescription>Enter a new image URL for your avatar.</DialogDescription>
+                                </DialogHeader>
+                                <Form {...avatarForm}>
+                                    <form onSubmit={avatarForm.handleSubmit(onAvatarSubmit)} className="space-y-4">
+                                        <FormField control={avatarForm.control} name="avatarUrl" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Image URL</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="https://example.com/image.png" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} />
+                                        <DialogFooter>
+                                            <Button type="button" variant="outline" onClick={() => setAvatarDialogOpen(false)}>Cancel</Button>
+                                            <Button type="submit">Save</Button>
+                                        </DialogFooter>
+                                    </form>
+                                </Form>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                     <CardTitle>{user.fullName || user.username}</CardTitle>
                     <CardDescription className="capitalize">{user.role}</CardDescription>
                 </CardHeader>
@@ -121,10 +183,10 @@ export default function ProfilePage() {
                         </div>
                     </div>
                     <Separator />
-                    <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+                    <Dialog open={isProfileDialogOpen} onOpenChange={setProfileDialogOpen}>
                         <DialogTrigger asChild>
                            <Button variant="outline" className="w-full">
-                                <Edit className="mr-2" /> Edit Profile
+                                <Edit className="mr-2 h-4 w-4" /> Edit Profile
                             </Button>
                         </DialogTrigger>
                         <DialogContent>
@@ -132,16 +194,16 @@ export default function ProfilePage() {
                                 <DialogTitle>Edit Profile</DialogTitle>
                                 <DialogDescription>Update your personal information.</DialogDescription>
                             </DialogHeader>
-                             <Form {...form}>
-                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                    <FormField control={form.control} name="fullName" render={({ field }) => (
+                             <Form {...profileForm}>
+                                <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
+                                    <FormField control={profileForm.control} name="fullName" render={({ field }) => (
                                         <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                                     )} />
-                                    <FormField control={form.control} name="email" render={({ field }) => (
+                                    <FormField control={profileForm.control} name="email" render={({ field }) => (
                                         <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                                     )} />
                                     <DialogFooter>
-                                        <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+                                        <Button type="button" variant="outline" onClick={() => setProfileDialogOpen(false)}>Cancel</Button>
                                         <Button type="submit">Save Changes</Button>
                                     </DialogFooter>
                                 </form>
@@ -149,7 +211,7 @@ export default function ProfilePage() {
                         </DialogContent>
                     </Dialog>
                      <Button variant="destructive" className="w-full" onClick={logout}>
-                        <LogOut className="mr-2" /> Logout
+                        <LogOut className="mr-2 h-4 w-4" /> Logout
                     </Button>
                 </CardContent>
             </Card>

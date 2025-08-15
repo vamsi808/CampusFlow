@@ -15,6 +15,7 @@ interface User {
   fullName?: string;
   email?: string;
   dateJoined?: string;
+  avatarUrl?: string;
 }
 
 type SignupData = Omit<User, 'id' | 'dateJoined'>;
@@ -38,7 +39,7 @@ const getStoredUsers = (): User[] => {
         return JSON.parse(usersJson);
     }
     // Add default admin user if no users exist
-    const adminUser: User = { id: 'admin-user', username: 'admin', role: 'admin', password: 'admin@123', fullName: 'Admin User', email: 'admin@campusflow.app', dateJoined: new Date().toISOString() };
+    const adminUser: User = { id: 'admin-user', username: 'admin', role: 'admin', password: 'admin@123', fullName: 'Admin User', email: 'admin@campusflow.app', dateJoined: new Date().toISOString(), avatarUrl: '' };
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify([adminUser]));
     return [adminUser];
 }
@@ -95,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 ...data,
                 id: `user-${Date.now()}`,
                 dateJoined: new Date().toISOString(),
+                avatarUrl: '',
             };
 
             const updatedUsers = [...users, newUser];
