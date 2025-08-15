@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { allResources, userReservations } from '@/lib/data';
 import { format, formatDistanceToNow, isPast, isFuture, getMonth } from 'date-fns';
-import { User, Mail, Calendar, LogOut, Briefcase, Edit, Clock, BarChart2, Pencil, Building, GraduationCap, Award, CalendarClock, CalendarCheck } from 'lucide-react';
+import { User, Mail, Calendar, LogOut, Briefcase, Edit, Clock, BarChart2, Pencil, Building, GraduationCap, Award, CalendarClock, CalendarCheck, TrendingUp, PieChart } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -59,23 +59,6 @@ export default function ProfilePage() {
   const [isProfileDialogOpen, setProfileDialogOpen] = React.useState(false);
   const [isAvatarDialogOpen, setAvatarDialogOpen] = React.useState(false);
 
-
-  const profileForm = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
-    values: {
-      fullName: user?.fullName || '',
-      email: user?.email || '',
-      studentId: user?.studentId || '',
-      department: user?.department || '',
-      yearOfStudy: user?.yearOfStudy || '',
-      jobTitle: user?.jobTitle || '',
-    }
-  });
-
-  const avatarForm = useForm<AvatarFormValues>({
-      resolver: zodResolver(avatarSchema)
-  });
-
   const reservationsWithDetails = React.useMemo(() => userReservations.map(res => {
     const resource = allResources.find(r => r.id === res.resourceId);
     return { ...res, resourceName: resource?.name || "Unknown", resourceType: resource?.type || "Unknown" };
@@ -105,6 +88,21 @@ export default function ProfilePage() {
     }));
   }, [reservationsWithDetails]);
 
+  const profileForm = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    values: {
+      fullName: user?.fullName || '',
+      email: user?.email || '',
+      studentId: user?.studentId || '',
+      department: user?.department || '',
+      yearOfStudy: user?.yearOfStudy || '',
+      jobTitle: user?.jobTitle || '',
+    }
+  });
+
+  const avatarForm = useForm<AvatarFormValues>({
+      resolver: zodResolver(avatarSchema)
+  });
 
   React.useEffect(() => {
     if (!isLoading && !user) {
@@ -173,6 +171,8 @@ export default function ProfilePage() {
     }
     return user.role.charAt(0).toUpperCase() + user.role.slice(1);
   };
+  
+  const hasBookings = reservationsWithDetails.length > 0;
 
   return (
     <div className="grid gap-8 md:grid-cols-3">
@@ -325,38 +325,48 @@ export default function ProfilePage() {
             <div className="grid gap-6 md:grid-cols-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Monthly Bookings</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><TrendingUp className="w-5 h-5" />Monthly Bookings</CardTitle>
                         <CardDescription>Your booking activity over the year.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ChartRoot config={{
-                            total: { label: 'Bookings', color: "hsl(var(--chart-1))" },
-                        }} className="h-[200px]">
-                            <ChartBarRoot data={monthlyBookingData}>
-                                <ChartXAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
-                                <ChartYAxis hide={true} />
-                                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                                <ChartBar dataKey="total" radius={8} />
-                            </ChartBarRoot>
-                        </ChartRoot>
+                        {hasBookings ? (
+                            <ChartRoot config={{
+                                total: { label: 'Bookings', color: "hsl(var(--chart-1))" },
+                            }} className="h-[200px]">
+                                <ChartBarRoot data={monthlyBookingData}>
+                                    <ChartXAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
+                                    <ChartYAxis hide={true} />
+                                    <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                                    <ChartBar dataKey="total" radius={8} />
+                                </ChartBarRoot>
+                            </ChartRoot>
+                        ) : (
+                            <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+                                No booking data yet.
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Resource Types</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><PieChart className="w-5 h-5" />Resource Types</CardTitle>
                         <CardDescription>Your most frequently booked resource types.</CardDescription>
                     </CardHeader>
                     <CardContent className="flex items-center justify-center">
-                         <div className="w-full h-full max-w-[200px] aspect-square">
-                             <ChartRoot config={{
-                                count: { label: 'Bookings' },
-                                ...resourceTypeData.reduce((acc, cur) => ({...acc, [cur.name]: {label: cur.name, color: cur.fill}}), {})
-                             }} className="h-full w-full">
-                                 <ChartPieRoot>
-                                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                                    <ChartPie data={resourceTypeData} dataKey="count" nameKey="name" innerRadius={50} />
-                                 </ChartPieRoot>
-                             </ChartRoot>
+                         <div className="w-full h-full min-h-[200px] flex items-center justify-center">
+                            {hasBookings ? (
+                                <ChartRoot config={{
+                                    count: { label: 'Bookings' },
+                                    ...resourceTypeData.reduce((acc, cur) => ({...acc, [cur.name]: {label: cur.name, color: cur.fill}}), {})
+                                }} className="h-full w-full max-w-[200px] aspect-square">
+                                    <ChartPieRoot>
+                                        <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                                        <ChartPie data={resourceTypeData} dataKey="count" nameKey="name" innerRadius={50} />
+                                    </ChartPieRoot>
+                                </ChartRoot>
+                            ) : (
+                                <div className="text-muted-foreground">No data to display.</div>
+                            )}
                          </div>
                     </CardContent>
                 </Card>
@@ -409,4 +419,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
