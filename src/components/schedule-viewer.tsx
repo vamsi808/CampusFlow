@@ -92,14 +92,22 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {timeSlots.map((slot, i) => {
-            const isPast = hydrated && isBefore(slot, new Date());
+            if (!hydrated) {
+              return (
+                <Button key={i} variant="outline" disabled={true} className="transition-all duration-200">
+                  {format(slot, 'h:mm a')}
+                </Button>
+              );
+            }
+            
+            const isPast = isBefore(slot, new Date());
             const isBooked = bookingsForDay.some(b => isSameHour(b.startTime, slot) || isWithinInterval(slot, { start: b.startTime, end: b.endTime }));
 
             return (
               <Button
                 key={i}
                 variant={isBooked ? "destructive" : "outline"}
-                disabled={isPast}
+                disabled={isPast || isBooked}
                 onClick={() => handleSlotClick(slot)}
                 className="transition-all duration-200"
               >
