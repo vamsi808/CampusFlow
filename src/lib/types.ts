@@ -1,7 +1,7 @@
 export interface Resource {
   id: string;
   name: string;
-  type: 'Study Room' | 'Lab Equipment' | 'Auditorium';
+  type: 'Study Room' | 'Lab Equipment' | 'Auditorium' | 'Sports Facility' | 'Court' | string;
   location: string;
   capacity: number;
   imageUrl: string;

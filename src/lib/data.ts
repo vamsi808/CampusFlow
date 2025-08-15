@@ -33,7 +33,7 @@ export const allBookings: Booking[] = [
   },
 ];
 
-export const allResources: Resource[] = [
+export let allResources: Resource[] = [
   {
     id: 'lib-sr-1',
     name: 'Quiet Study Room 101',
@@ -90,6 +90,24 @@ export const allResources: Resource[] = [
     imageUrl: 'https://placehold.co/600x400.png',
     description: 'Professional-grade pottery wheel for ceramic projects.',
   },
+  {
+    id: 'rec-gym-1',
+    name: 'Main Gymnasium',
+    type: 'Sports Facility',
+    location: 'Recreation Center',
+    capacity: 100,
+    imageUrl: 'https://placehold.co/600x400.png',
+    description: 'Full-size gymnasium for basketball, volleyball, and other indoor sports.',
+  },
+  {
+    id: 'rec-tennis-1',
+    name: 'Tennis Court 1',
+    type: 'Court',
+    location: 'Outdoor Sports Complex',
+    capacity: 4,
+    imageUrl: 'https://placehold.co/600x400.png',
+    description: 'Outdoor tennis court with high-quality surface.',
+  }
 ];
 
 export const resourceTypes = [...new Set(allResources.map(r => r.type))];
@@ -131,3 +149,15 @@ export const userNotifications: Notification[] = [
         date: subDays(new Date(), 2),
     }
 ];
+
+export const deleteResource = (id: string) => {
+  allResources = allResources.filter(r => r.id !== id);
+}
+
+export const addResource = (resource: Omit<Resource, 'schedule'>) => {
+  const newResource: Resource = {
+    ...resource,
+    id: `new-${Math.random().toString(36).substr(2, 9)}`,
+  };
+  allResources.unshift(newResource);
+}
