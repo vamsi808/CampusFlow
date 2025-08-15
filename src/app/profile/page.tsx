@@ -9,17 +9,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { allResources, userReservations } from '@/lib/data';
-import { format, formatDistanceToNow, isPast } from 'date-fns';
-import { User, Mail, Calendar, LogOut, Briefcase, Edit, Clock, BarChart2, Pencil, Building, GraduationCap, Award } from 'lucide-react';
+import { format, formatDistanceToNow, isPast, isFuture, getMonth } from 'date-fns';
+import { User, Mail, Calendar, LogOut, Briefcase, Edit, Clock, BarChart2, Pencil, Building, GraduationCap, Award, CalendarClock, CalendarCheck } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -29,6 +21,7 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { ChartRoot, ChartBar, ChartBarRoot, ChartTooltip, ChartTooltipContent, ChartXAxis, ChartYAxis, ChartLegend, ChartLegendContent, ChartPieRoot, ChartPie, ChartGrid } from "@/components/ui/chart";
 
 const profileSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),
@@ -142,12 +135,11 @@ export default function ProfilePage() {
     }
   };
 
-
   const reservationsWithDetails = userReservations.map(res => {
     const resource = allResources.find(r => r.id === res.resourceId);
-    return { ...res, resourceName: resource?.name || "Unknown" };
+    return { ...res, resourceName: resource?.name || "Unknown", resourceType: resource?.type || "Unknown" };
   });
-  
+
   const getRoleDescription = () => {
     if (user.role === 'student' && user.yearOfStudy) {
         return `${user.yearOfStudy}`;
@@ -157,6 +149,30 @@ export default function ProfilePage() {
     }
     return user.role.charAt(0).toUpperCase() + user.role.slice(1);
   };
+  
+  const monthlyBookingData = React.useMemo(() => {
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthlyCounts = Array(12).fill(0).map((_, i) => ({ month: monthNames[i], total: 0 }));
+    
+    reservationsWithDetails.forEach(res => {
+        const monthIndex = getMonth(res.startTime);
+        monthlyCounts[monthIndex].total += 1;
+    });
+
+    return monthlyCounts;
+  }, [reservationsWithDetails]);
+
+  const resourceTypeData = React.useMemo(() => {
+    const typeCounts: {[key: string]: number} = {};
+    reservationsWithDetails.forEach(res => {
+        typeCounts[res.resourceType] = (typeCounts[res.resourceType] || 0) + 1;
+    });
+    return Object.entries(typeCounts).map(([type, count], index) => ({
+      name: type,
+      count: count,
+      fill: `hsl(var(--chart-${(index % 5) + 1}))`
+    }));
+  }, [reservationsWithDetails]);
 
 
   return (
@@ -306,49 +322,86 @@ export default function ProfilePage() {
             </Card>
         </div>
 
-        <div className="md:col-span-2">
-            <Card>
+        <div className="md:col-span-2 space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Monthly Bookings</CardTitle>
+                        <CardDescription>Your booking activity over the year.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ChartRoot config={{
+                            total: { label: 'Bookings', color: "hsl(var(--chart-1))" },
+                        }} className="h-[200px]">
+                            <ChartBarRoot data={monthlyBookingData}>
+                                <ChartXAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
+                                <ChartYAxis hide={true} />
+                                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                                <ChartBar dataKey="total" radius={8} />
+                            </ChartBarRoot>
+                        </ChartRoot>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Resource Types</CardTitle>
+                        <CardDescription>Your most frequently booked resource types.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex items-center justify-center">
+                         <ChartRoot config={{
+                            count: { label: 'Bookings' },
+                            ...resourceTypeData.reduce((acc, cur) => ({...acc, [cur.name]: {label: cur.name, color: cur.fill}}), {})
+                         }} className="h-[200px] w-[200px]">
+                             <ChartPieRoot>
+                                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                                <ChartPie data={resourceTypeData} dataKey="count" nameKey="name" innerRadius={50} />
+                             </ChartPieRoot>
+                         </ChartRoot>
+                    </CardContent>
+                </Card>
+            </div>
+             <Card>
                 <CardHeader>
-                    <CardTitle>Booking History</CardTitle>
-                    <CardDescription>A record of your past and upcoming reservations.</CardDescription>
+                    <CardTitle>Your Bookings</CardTitle>
+                    <CardDescription>A quick look at your upcoming and recent reservations.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                            <TableHead>Resource</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Time</TableHead>
-                            <TableHead>Status</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {reservationsWithDetails.length > 0 ? (
-                                reservationsWithDetails.map((reservation) => (
-                                <TableRow key={reservation.id}>
-                                    <TableCell className="font-medium">
-                                        <Link href={`/resource/${reservation.resourceId}`} className="hover:underline">
-                                            {reservation.resourceName}
-                                        </Link>
-                                    </TableCell>
-                                    <TableCell>{format(reservation.startTime, 'MMM d, yyyy')}</TableCell>
-                                    <TableCell>{`${format(reservation.startTime, 'h:mm a')} - ${format(reservation.endTime, 'h:mm a')}`}</TableCell>
-                                    <TableCell>
-                                    <Badge variant={isPast(reservation.endTime) ? "outline" : "default"}>
-                                        {isPast(reservation.endTime) ? "Completed" : "Upcoming"}
-                                    </Badge>
-                                    </TableCell>
-                                </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                <TableCell colSpan={4} className="h-24 text-center">
-                                    You have no booking history.
-                                </TableCell>
-                                </TableRow>
+                <CardContent className="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 className="font-semibold flex items-center gap-2 mb-3"><CalendarClock className="w-5 h-5 text-primary" /> Upcoming</h3>
+                        <div className="space-y-4">
+                            {reservationsWithDetails.filter(r => isFuture(r.startTime)).map(res => (
+                                <div key={res.id} className="flex items-center">
+                                    <div className="flex-1 space-y-1">
+                                        <p className="font-medium">{res.resourceName}</p>
+                                        <p className="text-sm text-muted-foreground">{format(res.startTime, 'MMM d, yyyy, h:mm a')}</p>
+                                    </div>
+                                    <Button variant="secondary" size="sm" asChild>
+                                        <Link href={`/resource/${res.resourceId}`}>View</Link>
+                                    </Button>
+                                </div>
+                            ))}
+                            {reservationsWithDetails.filter(r => isFuture(r.startTime)).length === 0 && (
+                                <p className="text-sm text-muted-foreground">No upcoming bookings.</p>
                             )}
-                        </TableBody>
-                    </Table>
+                        </div>
+                    </div>
+                     <div>
+                        <h3 className="font-semibold flex items-center gap-2 mb-3"><CalendarCheck className="w-5 h-5 text-muted-foreground" /> Recent</h3>
+                        <div className="space-y-4">
+                             {reservationsWithDetails.filter(r => isPast(r.endTime)).slice(0,3).map(res => (
+                                <div key={res.id} className="flex items-center">
+                                    <div className="flex-1 space-y-1">
+                                        <p className="font-medium">{res.resourceName}</p>
+                                        <p className="text-sm text-muted-foreground">{format(res.endTime, 'MMM d, yyyy')}</p>
+                                    </div>
+                                    <Badge variant="outline">Completed</Badge>
+                                </div>
+                            ))}
+                            {reservationsWithDetails.filter(r => isPast(r.endTime)).length === 0 && (
+                                <p className="text-sm text-muted-foreground">No recent bookings.</p>
+                            )}
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
         </div>

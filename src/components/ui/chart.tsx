@@ -355,6 +355,26 @@ function getPayloadConfigFromPayload(
     : config[key as keyof typeof config]
 }
 
+const ChartRoot = ChartContainer
+const ChartGrid = RechartsPrimitive.CartesianGrid
+const ChartXAxis = RechartsPrimitive.XAxis
+const ChartYAxis = RechartsPrimitive.YAxis
+const ChartLegendRoot = ChartLegend
+const ChartTooltipRoot = ChartTooltip
+const ChartBar = RechartsPrimitive.Bar
+const ChartLine = RechartsPrimitive.Line
+const ChartArea = RechartsPrimitive.Area
+const ChartPie = RechartsPrimitive.Pie
+const ChartRadialBar = RechartsPrimitive.RadialBar
+const ChartRadar = RechartsPrimitive.Radar
+
+const ChartBarRoot = RechartsPrimitive.BarChart
+const ChartLineRoot = RechartsPrimitive.LineChart
+const ChartAreaRoot = RechartsPrimitive.AreaChart
+const ChartPieRoot = RechartsPrimitive.PieChart
+const ChartRadialBarRoot = RechartsPrimitive.RadialBarChart
+const ChartRadarRoot = RechartsPrimitive.RadarChart
+
 export {
   ChartContainer,
   ChartTooltip,
@@ -362,4 +382,22 @@ export {
   ChartLegend,
   ChartLegendContent,
   ChartStyle,
+  ChartRoot,
+  ChartGrid,
+  ChartXAxis,
+  ChartYAxis,
+  ChartLegendRoot,
+  ChartTooltipRoot,
+  ChartBar,
+  ChartLine,
+  ChartArea,
+  ChartPie,
+  ChartRadialBar,
+  ChartRadar,
+  ChartBarRoot,
+  ChartLineRoot,
+  ChartAreaRoot,
+  ChartPieRoot,
+  ChartRadialBarRoot,
+  ChartRadarRoot
 }
