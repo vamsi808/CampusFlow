@@ -1,5 +1,5 @@
 import type { Resource, Booking, Notification } from './types';
-import { addHours, set, subDays } from 'date-fns';
+import { addHours, set, subDays, formatDistanceToNow } from 'date-fns';
 
 const today = new Date();
 
@@ -133,22 +133,30 @@ export const userReservations: Booking[] = [
     startTime: subDays(new Date(), 1),
     endTime: subDays(new Date(), 1),
   },
+  {
+    id: 'user-res-3',
+    resourceId: 'rec-tennis-1',
+    userId: 'currentUser',
+    userName: 'Jane Doe',
+    title: 'Tennis practice',
+    startTime: addHours(new Date(), 20),
+    endTime: addHours(new Date(), 21),
+  }
 ];
 
-export const userNotifications: Notification[] = [
-    {
-        id: 'notif1',
-        title: 'Upcoming Booking',
-        description: 'Your booking for Collaborative Space 204 is in 2 hours.',
-        date: new Date(),
-    },
-    {
-        id: 'notif2',
-        title: 'Policy Update',
-        description: 'Booking duration has been updated to a maximum of 3 hours.',
-        date: subDays(new Date(), 2),
-    }
-];
+// Dynamically generate notifications from user's upcoming reservations
+export const userNotifications: Notification[] = userReservations
+  .filter(res => res.startTime > new Date())
+  .map((res, index) => {
+    const resource = allResources.find(r => r.id === res.resourceId);
+    return {
+      id: `notif-${index}`,
+      title: 'Upcoming Booking',
+      description: `Your booking for ${resource?.name || 'a resource'} is in ${formatDistanceToNow(res.startTime)}.`,
+      date: new Date(),
+    };
+  });
+
 
 export const deleteResource = (id: string) => {
   allResources = allResources.filter(r => r.id !== id);
