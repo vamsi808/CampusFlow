@@ -63,7 +63,7 @@ export default function ProfilePage() {
     const resource = allResources.find(r => r.id === res.resourceId);
     return { ...res, resourceName: resource?.name || "Unknown", resourceType: resource?.type || "Unknown" };
   }), []);
-
+  
   const monthlyBookingData = React.useMemo(() => {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const monthlyCounts = Array(12).fill(0).map((_, i) => ({ month: monthNames[i], total: 0 }));
@@ -334,6 +334,7 @@ export default function ProfilePage() {
                                 total: { label: 'Bookings', color: "hsl(var(--chart-1))" },
                             }} className="h-[200px]">
                                 <ChartBarRoot data={monthlyBookingData}>
+                                    <ChartGrid vertical={false} />
                                     <ChartXAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
                                     <ChartYAxis hide={true} />
                                     <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
@@ -365,7 +366,9 @@ export default function ProfilePage() {
                                     </ChartPieRoot>
                                 </ChartRoot>
                             ) : (
-                                <div className="text-muted-foreground">No data to display.</div>
+                                <div className="h-full flex items-center justify-center text-muted-foreground">
+                                    No data to display.
+                                </div>
                             )}
                          </div>
                     </CardContent>
