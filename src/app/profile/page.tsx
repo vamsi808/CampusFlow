@@ -22,16 +22,50 @@ import { format, formatDistanceToNow, isPast } from 'date-fns';
 import { User, Mail, Calendar, LogOut, Briefcase, Edit, Clock, BarChart2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+
+const profileSchema = z.object({
+  fullName: z.string().min(1, 'Full name is required'),
+  email: z.string().email('Invalid email address'),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout, isLoading, updateUser } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
+  const [isDialogOpen, setDialogOpen] = React.useState(false);
+
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    values: {
+      fullName: user?.fullName || '',
+      email: user?.email || '',
+    }
+  });
 
   React.useEffect(() => {
     if (!isLoading && !user) {
       router.replace('/login');
     }
   }, [user, isLoading, router]);
+  
+  React.useEffect(() => {
+    if (user) {
+        form.reset({
+            fullName: user.fullName || '',
+            email: user.email || '',
+        });
+    }
+  }, [user, form]);
+
 
   if (isLoading || !user) {
     return (
@@ -41,6 +75,17 @@ export default function ProfilePage() {
         </div>
     );
   }
+  
+  const onSubmit = async (data: ProfileFormValues) => {
+    try {
+        await updateUser(data);
+        toast({ title: "Profile Updated", description: "Your information has been saved." });
+        setDialogOpen(false);
+    } catch (error) {
+        toast({ variant: 'destructive', title: "Update Failed", description: (error as Error).message });
+    }
+  };
+
 
   const reservationsWithDetails = userReservations.map(res => {
     const resource = allResources.find(r => r.id === res.resourceId);
@@ -76,9 +121,33 @@ export default function ProfilePage() {
                         </div>
                     </div>
                     <Separator />
-                    <Button variant="outline" className="w-full">
-                        <Edit className="mr-2" /> Edit Profile
-                    </Button>
+                    <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+                        <DialogTrigger asChild>
+                           <Button variant="outline" className="w-full">
+                                <Edit className="mr-2" /> Edit Profile
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Edit Profile</DialogTitle>
+                                <DialogDescription>Update your personal information.</DialogDescription>
+                            </DialogHeader>
+                             <Form {...form}>
+                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                    <FormField control={form.control} name="fullName" render={({ field }) => (
+                                        <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                    )} />
+                                    <FormField control={form.control} name="email" render={({ field }) => (
+                                        <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                    )} />
+                                    <DialogFooter>
+                                        <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+                                        <Button type="submit">Save Changes</Button>
+                                    </DialogFooter>
+                                </form>
+                            </Form>
+                        </DialogContent>
+                    </Dialog>
                      <Button variant="destructive" className="w-full" onClick={logout}>
                         <LogOut className="mr-2" /> Logout
                     </Button>

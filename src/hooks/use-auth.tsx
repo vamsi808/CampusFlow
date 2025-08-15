@@ -25,6 +25,7 @@ interface AuthContextType {
   signup: (data: SignupData) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
+  updateUser: (data: Partial<Omit<User, 'id' | 'username' | 'role' | 'password'>>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -108,9 +109,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(SESSION_STORAGE_KEY);
     router.push('/login');
   };
+  
+  const updateUser = async (data: Partial<Omit<User, 'id' | 'username' | 'role' | 'password'>>): Promise<void> => {
+    return new Promise((resolve, reject) => {
+        if (!user) {
+            return reject(new Error("No user is logged in to update."));
+        }
+        setTimeout(() => {
+            const users = getStoredUsers();
+            const userIndex = users.findIndex(u => u.id === user.id);
+
+            if (userIndex > -1) {
+                // Update the user in the full list
+                const updatedUser = { ...users[userIndex], ...data };
+                users[userIndex] = updatedUser;
+                setStoredUsers(users);
+
+                // Update the active user session state
+                const { password, ...userToStore } = updatedUser;
+                setUser(userToStore);
+                localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(userToStore));
+                resolve();
+            } else {
+                reject(new Error("Could not find user to update."));
+            }
+        }, 300);
+    });
+  };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, isLoading, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
