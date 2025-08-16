@@ -74,15 +74,12 @@ const setStoredUsers = (users: User[]) => {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [auth, setAuth] = useState<Auth | null>(null);
+  const auth = getAuth(app);
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-    const authInstance = getAuth(app);
-    setAuth(authInstance);
-
-    const unsubscribe = onAuthStateChanged(authInstance, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
             const users = getStoredUsers();
             const appUser = users.find(u => u.id === firebaseUser.uid);
@@ -93,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                  if (appUser && appUser.status !== 'approved') {
                      toast({ variant: 'destructive', title: 'Login Failed', description: 'Your account is not approved yet.' });
                  }
-                signOut(authInstance); // Sign out if not approved
+                signOut(auth); // Sign out if not approved
                 setUser(null);
                 localStorage.removeItem(SESSION_STORAGE_KEY);
             }
@@ -120,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [toast]);
+  }, [auth, toast]);
 
   const login = async (email: string, password: string): Promise<void> => {
     if (!auth) throw new Error("Auth not initialized");
@@ -155,39 +152,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signup = async (data: SignupData): Promise<void> => {
-      if (!auth) throw new Error("Auth not initialized");
-
-      const {email, password, username, ...restData} = data;
-      if (!email || !password) throw new Error("Email and password are required for signup.");
-
-      const users = getStoredUsers();
-      if (users.some(u => u.email === email)) {
-        throw new Error("An account with this email already exists.");
-      }
-      if (users.some(u => u.username === username)) {
-          throw new Error("This username is already taken. Please choose another one.");
-      }
-
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
-
-      const newUser: User = {
-          ...restData,
-          id: firebaseUser.uid,
-          username,
-          email: firebaseUser.email || '',
-          dateJoined: new Date().toISOString(),
-          status: 'pending',
-          avatarUrl: `https://i.pravatar.cc/150?u=${firebaseUser.uid}`,
-      };
-      
-      const updatedUsers = [...users, newUser];
-      setStoredUsers(updatedUsers);
-
-      // We should immediately sign the user out after registration as they need approval
-      await signOut(auth);
+    if (!auth) throw new Error("Auth not initialized");
+  
+    const { email, password, username } = data;
+    if (!email || !password) {
+      throw new Error("Email and password are required for signup.");
+    }
+  
+    const users = getStoredUsers();
+    if (users.some(u => u.email === email)) {
+      throw new Error("An account with this email already exists.");
+    }
+    if (users.some(u => u.username === username)) {
+      throw new Error("This username is already taken. Please choose another one.");
+    }
+  
+    // Create user in Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const firebaseUser = userCredential.user;
+  
+    // Create the user profile for local storage
+    // We don't store the password here
+    const { password: _password, ...restData } = data;
+    const newUser: User = {
+      ...restData,
+      id: firebaseUser.uid,
+      username,
+      email: firebaseUser.email || '',
+      dateJoined: new Date().toISOString(),
+      status: 'pending',
+    };
+    
+    const updatedUsers = [...users, newUser];
+    setStoredUsers(updatedUsers);
+  
+    // We should immediately sign the user out after registration as they need approval
+    await signOut(auth);
   };
-
+  
   const logout = async () => {
     if (auth && auth.currentUser) {
         await signOut(auth);
