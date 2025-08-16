@@ -184,6 +184,15 @@ export default function ProfilePage() {
   const userTotalBookings = userReservations(user.id).length;
   const userActiveBookings = userReservations(user.id).filter(r => !isPast(r.endTime)).length;
 
+  const getInitials = (name: string) => {
+    if (!name) return "";
+    const nameParts = name.split(' ');
+    if (nameParts.length > 1) {
+        return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+
 
   return (
     <div className="grid gap-8 md:grid-cols-3">
@@ -193,7 +202,7 @@ export default function ProfilePage() {
                     <div className="relative group">
                         <Avatar className="w-24 h-24 mb-4 border-2 border-primary">
                             <AvatarImage src={user.avatarUrl} alt={user.username} />
-                            <AvatarFallback>{user.fullName ? user.fullName.split(' ').map(n => n[0]).join('') : user.username.substring(0,2).toUpperCase()}</AvatarFallback>
+                            <AvatarFallback>{getInitials(user.fullName || user.username)}</AvatarFallback>
                         </Avatar>
                         <Dialog open={isAvatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
                             <DialogTrigger asChild>
@@ -446,3 +455,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    

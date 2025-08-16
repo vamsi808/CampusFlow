@@ -55,6 +55,15 @@ export function Header() {
   const { user, logout } = useAuth();
   const notifications = user ? userNotifications(user.id) : [];
 
+  const getInitials = (name: string) => {
+    if (!name) return "";
+    const nameParts = name.split(' ');
+    if (nameParts.length > 1) {
+        return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
       <div className="container mx-auto flex h-16 items-center px-4 sm:px-6 lg:px-8">
@@ -135,7 +144,7 @@ export function Header() {
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
                     <AvatarImage src={user.avatarUrl} alt="User avatar" />
-                    <AvatarFallback>{user ? user.username.substring(0,2).toUpperCase() : 'G'}</AvatarFallback>
+                    <AvatarFallback>{getInitials(user.fullName || user.username)}</AvatarFallback>
                     </Avatar>
                 </Button>
                 </DropdownMenuTrigger>
@@ -243,5 +252,7 @@ export function Header() {
     </header>
   );
 }
+
+    
 
     
