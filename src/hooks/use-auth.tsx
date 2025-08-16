@@ -107,13 +107,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const [auth, setAuth] = useState<Auth | null>(null);
+  // Initialize auth directly. Since this is a client component, `getAuth` will run on the client.
+  const auth = getAuth(app); 
 
   useEffect(() => {
-    const authInstance = getAuth(app);
-    setAuth(authInstance);
-
-    const unsubscribe = onAuthStateChanged(authInstance, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
             const users = getStoredUsers();
             const appUser = users.find(u => u.id === firebaseUser.uid);
@@ -121,8 +119,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setUser(appUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(appUser));
             } else {
-                 // This can happen if user exists in Firebase but not in local storage
-                 // Let's create a local record for them.
                  const newAppUser = mapFirebaseUserToAppUser(firebaseUser);
                  const newUsersList = [...users, newAppUser];
                  setStoredUsers(newUsersList);
@@ -134,7 +130,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (sessionJson) {
                 try {
                     const sessionUser = JSON.parse(sessionJson);
-                     // Persist admin session, clear others
                      if (sessionUser.username !== 'admin') {
                        localStorage.removeItem(SESSION_STORAGE_KEY);
                        setUser(null);
@@ -153,10 +148,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [auth]);
 
   const login = async (email: string, password: string): Promise<void> => {
-    if (!auth) throw new Error("Auth not initialized");
     if ((email === 'admin' || email === 'admin@campusflow.app') && password === 'admin@123') {
         const users = getStoredUsers();
         const adminUser = users.find(u => u.username === 'admin');
@@ -172,9 +166,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   
   const loginWithGoogle = async (): Promise<void> => {
-    if (!auth) {
-        throw new Error("Auth not initialized");
-    }
     const provider = new GoogleAuthProvider();
     try {
         const result = await signInWithPopup(auth, provider);
@@ -189,7 +180,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let appUser = allUsers.find(u => u.id === firebaseUser.uid);
       
         if (!appUser) {
-            // If user does not exist in our local storage, create them
             appUser = mapFirebaseUserToAppUser(firebaseUser);
             allUsers.push(appUser);
             setStoredUsers(allUsers);
@@ -199,19 +189,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(appUser));
         router.push('/');
     } catch (error: any) {
-        // Sign out to prevent inconsistent states
         if (auth.currentUser) {
             await signOut(auth);
         }
         setUser(null);
         localStorage.removeItem(SESSION_STORAGE_KEY);
-        // Re-throw the original error so the UI can display it
         throw error;
     }
   }
 
   const signup = async (data: SignupData): Promise<void> => {
-      if (!auth) throw new Error("Auth not initialized");
       const {email, password, ...restData} = data;
       if (!email || !password) throw new Error("Email and password are required for signup.");
 
@@ -232,7 +219,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    if (!auth) return;
     if (auth.currentUser) {
         await signOut(auth);
     }
@@ -246,7 +232,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!user) {
             return reject(new Error("No user is logged in to update."));
         }
-        // Using a timeout to simulate an async operation
         setTimeout(() => {
             const users = getStoredUsers();
             const userIndex = users.findIndex(u => u.id === user.id);
