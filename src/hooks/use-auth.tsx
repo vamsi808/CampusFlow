@@ -18,7 +18,6 @@ import {
 const USERS_STORAGE_KEY = 'campus-flow-users';
 const SESSION_STORAGE_KEY = 'campus-flow-session';
 
-const auth = getAuth(app); // Get the auth instance from the app
 
 interface User {
   id: string;
@@ -101,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    const auth = getAuth(app);
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
             const users = getStoredUsers();
@@ -133,10 +133,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return;
         }
     }
+    const auth = getAuth(app);
     await signInWithEmailAndPassword(auth, email, password);
   };
   
   const loginWithGoogle = async (): Promise<void> => {
+    const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
@@ -169,6 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("Only institutional accounts (@mlrit.ac.in) are allowed to sign up.");
       }
 
+      const auth = getAuth(app);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
 
@@ -188,6 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    const auth = getAuth(app);
     await signOut(auth);
     router.push('/login');
   };
