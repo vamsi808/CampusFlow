@@ -38,21 +38,36 @@ const signupSchema = z.object({
   department: z.string().optional(),
   yearOfStudy: z.string().optional(),
   jobTitle: z.string().optional(),
-  section: z.string().optional().refine(val => !val || /^[A-Z]$/.test(val), {
-      message: "Section must be a single uppercase letter.",
-  }),
-}).refine(data => {
-    if (data.role === 'student' && data.yearOfStudy) {
-        const year = parseInt(data.yearOfStudy.replace(/\D/g, ''), 10);
-        return !isNaN(year) && year <= 4;
-    }
-    return true;
-}, {
-    message: "Year of study cannot be greater than 4.",
-    path: ['yearOfStudy'],
+  section: z.string().optional(),
 }).refine(data => data.password === data.confirmPassword, {
     message: "Passwords do not match.",
     path: ["confirmPassword"],
+}).superRefine((data, ctx) => {
+    if (data.role === 'student') {
+        if (!data.department) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Department is required.", path: ['department'] });
+        }
+        if (!data.yearOfStudy) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Year of study is required.", path: ['yearOfStudy'] });
+        } else {
+             const year = parseInt(data.yearOfStudy.replace(/\D/g, ''), 10);
+             if (isNaN(year) || year > 4 || year < 1) {
+                 ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Year must be between 1 and 4.", path: ['yearOfStudy'] });
+             }
+        }
+        if (!data.section) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Section is required.", path: ['section'] });
+        } else if (!/^[A-Z]$/.test(data.section)) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Section must be a single uppercase letter.", path: ['section'] });
+        }
+    } else if (data.role === 'faculty') {
+        if (!data.department) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Department is required.", path: ['department'] });
+        }
+        if (!data.jobTitle) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Job title is required.", path: ['jobTitle'] });
+        }
+    }
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
@@ -74,6 +89,7 @@ export default function SignupPage() {
       password: '',
       confirmPassword: '',
       studentId: '',
+      role: undefined,
       department: '',
       yearOfStudy: '',
       jobTitle: '',
@@ -89,7 +105,9 @@ export default function SignupPage() {
   const onSubmit = async (data: SignupFormValues) => {
     setIsLoading(true);
     try {
-      await signup(data);
+      // Destructure to remove confirmPassword before sending to backend
+      const { confirmPassword, ...signupData } = data;
+      await signup(signupData);
       toast({
         title: 'Request Sent',
         description: "Your registration request has been sent to the admin for approval.",
@@ -185,7 +203,7 @@ export default function SignupPage() {
                             <FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="yearOfStudy" render={({ field }) => (
-                            <FormItem><FormLabel>Year of Study</FormLabel><FormControl><Input placeholder="e.g. 3 or 3rd Year" {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Year of Study</FormLabel><FormControl><Input placeholder="e.g. 3" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                          <FormField control={form.control} name="section" render={({ field }) => (
                             <FormItem><FormLabel>Section</FormLabel><FormControl><Input placeholder="e.g. A" {...field} /></FormControl><FormMessage /></FormItem>

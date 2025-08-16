@@ -19,7 +19,7 @@ import { useToast } from './use-toast';
 const USERS_STORAGE_KEY = 'campus-flow-users';
 const SESSION_STORAGE_KEY = 'campus-flow-session';
 
-type SignupData = Omit<User, 'id' | 'dateJoined' | 'status'>;
+type SignupData = Omit<User, 'id' | 'dateJoined' | 'status' | 'confirmPassword'>;
 
 interface AuthContextType {
   user: User | null;
