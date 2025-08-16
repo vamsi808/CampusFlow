@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPendingUsers, updateUserStatus } from "@/lib/data";
-import { Check, X, Filter, Users, Building, GraduationCap } from "lucide-react";
+import { Check, X, Users, Building, GraduationCap } from "lucide-react";
 import type { User } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -43,17 +43,24 @@ export default function AccountApprovalsPage() {
         search: ''
     });
 
+    // This effect ensures we always have the latest user data
     React.useEffect(() => {
-        const users = getPendingUsers();
-        setPendingUsers(users);
-        setFilteredUsers(users);
+        const fetchUsers = () => {
+            const users = getPendingUsers();
+            setPendingUsers(users);
+        };
+        fetchUsers();
+
+        // Optional: Listen for storage changes to auto-update if the app were more complex
+        // window.addEventListener('storage', fetchUsers);
+        // return () => window.removeEventListener('storage', fetchUsers);
     }, []);
 
     React.useEffect(() => {
         let newFilteredUsers = pendingUsers.filter(user => {
             const roleMatch = filters.role === 'all' || user.role === filters.role;
             const departmentMatch = filters.department === 'all' || user.department === filters.department;
-            const yearMatch = filters.year === 'all' || user.yearOfStudy?.includes(filters.year);
+            const yearMatch = filters.year === 'all' || (user.yearOfStudy && user.yearOfStudy.toString().includes(filters.year));
             const searchMatch = filters.search === '' ||
                 user.fullName?.toLowerCase().includes(filters.search.toLowerCase()) ||
                 user.email?.toLowerCase().includes(filters.search.toLowerCase()) ||
