@@ -18,6 +18,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Shield, Smartphone, Monitor } from 'lucide-react';
+import { format } from 'date-fns';
 
 const profileSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),
@@ -154,6 +156,74 @@ export default function SettingsPage() {
           </Form>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+            <CardTitle>Security &amp; Login</CardTitle>
+            <CardDescription>Manage your password, two-factor authentication, and see active sessions.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+            <div>
+                <h3 className="font-medium mb-2">Change Password</h3>
+                <Form {...passwordForm}>
+                <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4 max-w-md">
+                <FormField control={passwordForm.control} name="currentPassword" render={({ field }) => (
+                    <FormItem><FormLabel>Current Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={passwordForm.control} name="newPassword" render={({ field }) => (
+                    <FormItem><FormLabel>New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={passwordForm.control} name="confirmPassword" render={({ field }) => (
+                    <FormItem><FormLabel>Confirm New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <Button type="submit" disabled={passwordForm.formState.isSubmitting}>Update Password</Button>
+                </form>
+            </Form>
+            </div>
+            <Separator />
+            <div>
+                <h3 className="font-medium mb-2">Two-Factor Authentication</h3>
+                <div className="flex items-center justify-between p-4 border rounded-md">
+                    <div>
+                        <h4 className="font-normal flex items-center gap-2"><Shield className="w-4 h-4 text-primary"/> 2FA is currently disabled</h4>
+                        <p className="text-sm text-muted-foreground mt-1">Add an extra layer of security to your account.</p>
+                    </div>
+                    <Button disabled>Set Up 2FA</Button>
+                </div>
+            </div>
+            <Separator />
+             <div>
+                <h3 className="font-medium mb-2">Session Management</h3>
+                <p className="text-sm text-muted-foreground mb-4">You are currently logged in on these devices. You can log out of sessions you don't recognize.</p>
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 border rounded-md">
+                        <div className="flex items-center gap-4">
+                            <Monitor className="w-6 h-6 text-primary"/>
+                            <div>
+                                <h4 className="font-semibold">This Mac</h4>
+                                <p className="text-sm text-muted-foreground">Chrome - Current session</p>
+                            </div>
+                        </div>
+                         <Button variant="outline" disabled>Current</Button>
+                    </div>
+                     <div className="flex items-center justify-between p-4 border rounded-md">
+                        <div className="flex items-center gap-4">
+                            <Smartphone className="w-6 h-6 text-muted-foreground"/>
+                            <div>
+                                <h4 className="font-semibold">iPhone 15 Pro</h4>
+                                <p className="text-sm text-muted-foreground">Safari - Logged in {format(new Date(), "MMM d, yyyy")}</p>
+                            </div>
+                        </div>
+                         <Button variant="outline" disabled>Log out</Button>
+                    </div>
+                </div>
+                <div className="mt-4 flex justify-between items-center">
+                    <Button variant="outline" disabled>View login activity</Button>
+                    <Button variant="destructive" disabled>Log out of all other sessions</Button>
+                </div>
+             </div>
+        </CardContent>
+      </Card>
       
       <Card>
         <CardHeader>
@@ -217,7 +287,7 @@ export default function SettingsPage() {
                 <h3 className="font-medium">Font Size</h3>
                 <p className="text-sm text-muted-foreground">Adjust the application's font size for better readability.</p>
             </div>
-            <RadioGroup defaultValue="base" onValueChange={(val) => handleFontSizeChange(val as any)} className="flex items-center gap-4">
+             <RadioGroup defaultValue="base" onValueChange={(val) => handleFontSizeChange(val as any)} className="flex items-center gap-4">
                 <div className="flex items-center space-x-3 space-y-0">
                     <RadioGroupItem value="sm" id="font-sm" />
                     <Label htmlFor="font-sm" className="font-normal">Small</Label>
@@ -299,30 +369,6 @@ export default function SettingsPage() {
                     </div>
                  </div>
              </div>
-        </CardContent>
-      </Card>
-
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Password</CardTitle>
-          <CardDescription>Change your password here. Use a strong, unique password for your security.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...passwordForm}>
-            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
-              <FormField control={passwordForm.control} name="currentPassword" render={({ field }) => (
-                <FormItem><FormLabel>Current Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={passwordForm.control} name="newPassword" render={({ field }) => (
-                <FormItem><FormLabel>New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={passwordForm.control} name="confirmPassword" render={({ field }) => (
-                <FormItem><FormLabel>Confirm New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <Button type="submit" disabled={passwordForm.formState.isSubmitting}>Update Password</Button>
-            </form>
-          </Form>
         </CardContent>
       </Card>
       
