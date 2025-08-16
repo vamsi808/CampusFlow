@@ -174,7 +174,7 @@ export default function SettingsPage() {
                     <FormItem><FormLabel>New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={passwordForm.control} name="confirmPassword" render={({ field }) => (
-                    <FormItem><FormLabel>Confirm New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormMessage>
+                    <FormItem><FormLabel>Confirm New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl></FormItem>
                 )} />
                 <Button type="submit" disabled={passwordForm.formState.isSubmitting}>Update Password</Button>
                 </form>
@@ -313,7 +313,7 @@ export default function SettingsPage() {
              <div className="space-y-4">
                 <h3 className="font-medium">Channels</h3>
                  <div className="flex items-center justify-between p-4 border rounded-md">
-                     <div>
+                    <div>
                         <h4 className="font-normal">Email Notifications</h4>
                         <p className="text-sm text-muted-foreground">Receive notifications via your registered email.</p>
                      </div>
@@ -388,5 +388,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    
