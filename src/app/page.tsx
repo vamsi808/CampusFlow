@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from 'react';
@@ -13,6 +14,11 @@ export default function ResourceBrowserPage() {
   const [typeFilter, setTypeFilter] = React.useState('all');
   const [locationFilter, setLocationFilter] = React.useState('all');
   const [capacityFilter, setCapacityFilter] = React.useState(0);
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const filteredResources = React.useMemo(() => {
     return allResources.filter(resource => {
@@ -63,21 +69,23 @@ export default function ResourceBrowserPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <AnimatePresence>
-          {filteredResources.map((resource, i) => (
-            <motion.div
-              key={resource.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2, delay: i * 0.05 }}
-            >
-              <ResourceCard resource={resource} />
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {isClient && (
+            <AnimatePresence>
+              {filteredResources.map((resource, i) => (
+                <motion.div
+                  key={resource.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.2, delay: i * 0.05 }}
+                >
+                  <ResourceCard resource={resource} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+        )}
       </div>
-      {filteredResources.length === 0 && (
+      {isClient && filteredResources.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           <p className="text-lg font-medium">No resources found</p>
           <p>Try adjusting your search or filters.</p>
