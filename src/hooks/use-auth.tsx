@@ -12,7 +12,8 @@ import {
   signOut,
   User as FirebaseUser,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  Auth
 } from "firebase/auth";
 
 const USERS_STORAGE_KEY = 'campus-flow-users';
@@ -102,10 +103,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const [auth, setAuth] = useState<Auth | null>(null);
 
   useEffect(() => {
-    const auth = getAuth(app);
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    // This ensures getAuth is only called on the client side
+    const authInstance = getAuth(app);
+    setAuth(authInstance);
+
+    const unsubscribe = onAuthStateChanged(authInstance, (firebaseUser) => {
         if (firebaseUser) {
             const users = getStoredUsers();
             let appUser = users.find(u => u.id === firebaseUser.uid);
@@ -121,10 +126,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Also check for local admin session
             const sessionJson = localStorage.getItem(SESSION_STORAGE_KEY);
             if (sessionJson) {
-                const sessionUser = JSON.parse(sessionJson);
-                if (sessionUser.username === 'admin') {
-                    setUser(sessionUser);
-                } else {
+                try {
+                    const sessionUser = JSON.parse(sessionJson);
+                    if (sessionUser.username === 'admin') {
+                        setUser(sessionUser);
+                    } else {
+                        setUser(null);
+                        localStorage.removeItem(SESSION_STORAGE_KEY);
+                    }
+                } catch (error) {
                     setUser(null);
                     localStorage.removeItem(SESSION_STORAGE_KEY);
                 }
@@ -139,6 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string): Promise<void> => {
+    if (!auth) throw new Error("Auth not initialized");
     // Check for local admin user first
     if (email === 'admin' && password === 'admin@123') {
         const users = getStoredUsers();
@@ -149,12 +160,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return;
         }
     }
-    const auth = getAuth(app);
     await signInWithEmailAndPassword(auth, email, password);
   };
   
   const loginWithGoogle = async (): Promise<void> => {
-    const auth = getAuth(app);
+    if (!auth) throw new Error("Auth not initialized");
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
@@ -187,6 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signup = async (data: SignupData): Promise<void> => {
+      if (!auth) throw new Error("Auth not initialized");
       const {email, password, ...restData} = data;
       if (!email || !password) throw new Error("Email and password are required for signup.");
 
@@ -194,7 +205,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("Only institutional accounts (@mlrit.ac.in) are allowed to sign up.");
       }
 
-      const auth = getAuth(app);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
 
@@ -213,7 +223,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    const auth = getAuth(app);
+    if (!auth) {
+        setUser(null);
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+        router.push('/login');
+        return;
+    };
     if (auth.currentUser) {
         await signOut(auth);
     }
@@ -262,3 +277,5 @@ export function useAuth() {
   }
   return context;
 }
+
+    
