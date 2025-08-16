@@ -116,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             let appUser = users.find(u => u.id === firebaseUser.uid);
             if (!appUser) {
                 // This case handles users who signed up with Google but aren't in our local storage yet.
+                // We create a temporary user object, but the definitive one will be created/updated on successful sign-in logic.
                 appUser = mapFirebaseUserToAppUser(firebaseUser);
                 users.push(appUser);
                 setStoredUsers(users);
@@ -128,11 +129,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (sessionJson) {
                 try {
                     const sessionUser = JSON.parse(sessionJson);
-                    if (sessionUser.username === 'admin') {
-                        setUser(sessionUser);
+                    // Clear non-Firebase sessions on auth state change to avoid conflicts
+                    if (sessionUser.username !== 'admin') {
+                       localStorage.removeItem(SESSION_STORAGE_KEY);
+                       setUser(null);
                     } else {
-                        setUser(null);
-                        localStorage.removeItem(SESSION_STORAGE_KEY);
+                       setUser(sessionUser)
                     }
                 } catch (error) {
                     setUser(null);
@@ -151,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<void> => {
     if (!auth) throw new Error("Auth not initialized");
     // Check for local admin user first
-    if (email === 'admin' && password === 'admin@123') {
+    if ((email === 'admin' || email === 'admin@campusflow.app') && password === 'admin@123') {
         const users = getStoredUsers();
         const adminUser = users.find(u => u.username === 'admin');
         if (adminUser) {
@@ -177,14 +179,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       const users = getStoredUsers();
       let appUser = users.find(u => u.id === firebaseUser.uid);
+      
       if (!appUser) {
-        appUser = mapFirebaseUserToAppUser(firebaseUser);
+        // If user doesn't exist, create them.
+        appUser = mapFirebaseUserToAppUser(firebaseUser, 'student'); // Default role 'student'
         users.push(appUser);
         setStoredUsers(users);
       }
       
-      setUser(appUser);
-      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(appUser));
+      // onAuthStateChanged will handle setting the user and session
       router.push('/');
 
     } catch (error: any) {
@@ -192,6 +195,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (auth.currentUser) {
             await signOut(auth);
         }
+        setUser(null);
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+        // Rethrow the error to be caught by the UI
         throw error;
     }
   }
@@ -219,19 +225,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const users = getStoredUsers();
       const updatedUsers = [...users, newUser];
       setStoredUsers(updatedUsers);
-      // Let onAuthStateChanged handle setting the user
+      // Let onAuthStateChanged handle setting the user after redirecting to login
   };
 
   const logout = async () => {
     if (!auth) {
+        // Handle non-firebase logout (e.g., admin)
         setUser(null);
         localStorage.removeItem(SESSION_STORAGE_KEY);
         router.push('/login');
         return;
     };
+
     if (auth.currentUser) {
         await signOut(auth);
     }
+    
     setUser(null);
     localStorage.removeItem(SESSION_STORAGE_KEY);
     router.push('/login');
@@ -242,6 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!user) {
             return reject(new Error("No user is logged in to update."));
         }
+        // Use a timeout to simulate an async operation
         setTimeout(() => {
             const users = getStoredUsers();
             const userIndex = users.findIndex(u => u.id === user.id);
@@ -277,5 +287,3 @@ export function useAuth() {
   }
   return context;
 }
-
-    
