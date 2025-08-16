@@ -58,8 +58,11 @@ export function Header() {
   const getInitials = (name: string) => {
     if (!name) return "";
     const nameParts = name.split(' ');
-    if (nameParts.length > 1) {
+    if (nameParts.length > 1 && nameParts[0] && nameParts[nameParts.length - 1]) {
         return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
+    }
+    if (nameParts[0] && nameParts[0].length > 1) {
+        return nameParts[0].substring(0, 2).toUpperCase();
     }
     return name.substring(0, 2).toUpperCase();
   }
@@ -171,9 +174,11 @@ export function Header() {
                             <span>Profile</span>
                         </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem disabled>
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Settings</span>
+                    <DropdownMenuItem asChild>
+                        <Link href="/settings">
+                            <Settings className="mr-2 h-4 w-4" />
+                            <span>Settings</span>
+                        </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={logout}>
