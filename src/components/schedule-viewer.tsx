@@ -21,6 +21,7 @@ import { AlternativeResourcesModal } from './alternative-resources-modal';
 import { useAuth } from '@/hooks/use-auth';
 import { addBooking } from '@/lib/data';
 import { useRouter } from 'next/navigation';
+import { Skeleton } from './ui/skeleton';
 
 interface ScheduleViewerProps {
   resource: Resource;
@@ -111,7 +112,7 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {!isClient && Array.from({ length: 12 }).map((_, i) => (
-             <Button key={i} variant="outline" disabled={true} className="transition-all duration-200 h-9" />
+             <Skeleton key={i} className="h-9 w-full" />
           ))}
           {isClient && timeSlots.map((time, i) => {
             const isPast = isBefore(time, new Date());
@@ -171,3 +172,4 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
     </div>
   );
 }
+
