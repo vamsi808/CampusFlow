@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus } from 'lucide-react';
 import Link from 'next/link';
+import { Separator } from '@/components/ui/separator';
 
 const signupSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),
@@ -32,7 +33,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signup } = useAuth();
+  const { signup, loginWithGoogle } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -70,9 +71,29 @@ export default function SignupPage() {
         title: 'Signup Failed',
         description: (error as Error).message,
       });
+    } finally {
       setIsLoading(false);
     }
   };
+  
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+        await loginWithGoogle();
+        toast({
+            title: 'Account Created',
+            description: 'Welcome! Your account has been created with Google.',
+        });
+    } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Google Sign-Up Failed',
+            description: (error as Error).message,
+        });
+    } finally {
+        setIsLoading(false);
+    }
+  }
 
   return (
     <div className="flex items-center justify-center py-12">
@@ -137,11 +158,19 @@ export default function SignupPage() {
 
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Creating Account...' : 'Sign Up'}
+                {isLoading ? 'Creating Account...' : 'Sign Up with Email'}
                 <UserPlus className="ml-2 h-4 w-4" />
               </Button>
             </form>
           </Form>
+           <div className="relative my-6">
+              <Separator />
+              <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-card px-2 text-sm text-muted-foreground">OR</span>
+          </div>
+           <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading}>
+            <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 21.2 177.2 56.4l-63.1 61.9C338.4 99.8 298.9 87 248 87c-88.1 0-160.1 71.1-160.1 168.9s72 168.9 160.1 168.9c99.9 0 133.5-76.4 137.9-114.9H248v-75.3h236.3c.8 12.2 1.2 24.5 1.2 37.1z"></path></svg>
+            Sign up with Google
+          </Button>
         </CardContent>
         <CardFooter className="flex justify-center text-sm">
             <p>Already have an account? <Link href="/login" className="font-semibold text-primary hover:underline">Log In</Link></p>
@@ -150,4 +179,3 @@ export default function SignupPage() {
     </div>
   );
 }
-

@@ -3,6 +3,16 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase';
+import { 
+  onAuthStateChanged, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  signOut,
+  User as FirebaseUser,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword
+} from "firebase/auth";
 
 const USERS_STORAGE_KEY = 'campus-flow-users';
 const SESSION_STORAGE_KEY = 'campus-flow-session';
@@ -27,6 +37,7 @@ type SignupData = Omit<User, 'id' | 'dateJoined'>;
 interface AuthContextType {
   user: User | null;
   login: (username: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
@@ -40,7 +51,12 @@ const getStoredUsers = (): User[] => {
     if (typeof window === 'undefined') return [];
     const usersJson = localStorage.getItem(USERS_STORAGE_KEY);
     if (usersJson) {
-        return JSON.parse(usersJson);
+        try {
+            return JSON.parse(usersJson);
+        } catch (e) {
+            console.error("Failed to parse users from localStorage", e);
+            return [];
+        }
     }
     // Add default admin user if no users exist
     const adminUser: User = { 
@@ -64,66 +80,89 @@ const setStoredUsers = (users: User[]) => {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
 }
 
+const mapFirebaseUserToAppUser = (firebaseUser: FirebaseUser, role: 'student' | 'faculty' | 'admin' = 'student'): User => {
+    return {
+        id: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        fullName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'New User',
+        username: firebaseUser.email?.split('@')[0] || 'newuser',
+        avatarUrl: firebaseUser.photoURL || '',
+        dateJoined: firebaseUser.metadata.creationTime || new Date().toISOString(),
+        role: role,
+    }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    // Initialize users on first load
-    getStoredUsers();
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        if (firebaseUser) {
+            const users = getStoredUsers();
+            let appUser = users.find(u => u.id === firebaseUser.uid);
+            if (!appUser) {
+                appUser = mapFirebaseUserToAppUser(firebaseUser);
+                users.push(appUser);
+                setStoredUsers(users);
+            }
+            setUser(appUser);
+            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(appUser));
+        } else {
+            setUser(null);
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+        }
+        setIsLoading(false);
+    });
 
-    // Check for user session in local storage on initial load
-    const storedUser = localStorage.getItem(SESSION_STORAGE_KEY);
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    return () => unsubscribe();
   }, []);
 
-  const login = async (username: string, password: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
+  const login = async (email: string, password: string): Promise<void> => {
+    // Check for local admin user first
+    if (email === 'admin' && password === 'admin@123') {
         const users = getStoredUsers();
-        const foundUser = users.find(u => u.username === username && u.password === password);
-        
-        if (foundUser) {
-          const { password, ...userToStore } = foundUser;
-          setUser(userToStore);
-          localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(userToStore));
-          resolve();
-        } else {
-          reject(new Error('Invalid username or password.'));
+        const adminUser = users.find(u => u.username === 'admin');
+        if (adminUser) {
+            setUser(adminUser);
+            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(adminUser));
+            return;
         }
-      }, 500);
-    });
+    }
+    await signInWithEmailAndPassword(auth, email, password);
   };
+  
+  const loginWithGoogle = async (): Promise<void> => {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+    router.push('/');
+  }
 
   const signup = async (data: SignupData): Promise<void> => {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            const users = getStoredUsers();
-            if (users.some(u => u.username === data.username)) {
-                return reject(new Error('Username is already taken.'));
-            }
+      const {email, password, ...restData} = data;
+      if (!email || !password) throw new Error("Email and password are required for signup.");
 
-            const newUser: User = {
-                ...data,
-                id: `user-${Date.now()}`,
-                dateJoined: new Date().toISOString(),
-                avatarUrl: '',
-            };
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
 
-            const updatedUsers = [...users, newUser];
-            setStoredUsers(updatedUsers);
-            resolve();
-        }, 500);
-    });
+      const newUser: User = {
+          ...restData,
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          dateJoined: new Date().toISOString(),
+          avatarUrl: '',
+      };
+      
+      const users = getStoredUsers();
+      const updatedUsers = [...users, newUser];
+      setStoredUsers(updatedUsers);
+      setUser(newUser);
+      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(newUser));
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem(SESSION_STORAGE_KEY);
+  const logout = async () => {
+    await signOut(auth);
     router.push('/login');
   };
   
@@ -143,9 +182,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setStoredUsers(users);
 
                 // Update the active user session state
-                const { password, ...userToStore } = updatedUser;
-                setUser(userToStore);
-                localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(userToStore));
+                setUser(updatedUser);
+                localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedUser));
                 resolve();
             } else {
                 reject(new Error("Could not find user to update."));
@@ -155,7 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading, updateUser }}>
+    <AuthContext.Provider value={{ user, login, loginWithGoogle, signup, logout, isLoading, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
