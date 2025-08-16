@@ -189,7 +189,7 @@ export default function ProfilePage() {
                 <CardHeader className="items-center text-center">
                     <div className="relative group">
                         <Avatar className="w-24 h-24 mb-4 border-2 border-primary">
-                            <AvatarImage src={user.avatarUrl || `https://i.pravatar.cc/300?u=${user.id}`} alt={user.username} />
+                            <AvatarImage src={user.avatarUrl} alt={user.username} />
                             <AvatarFallback>{user.username.substring(0,2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <Dialog open={isAvatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
@@ -432,5 +432,7 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
 
     

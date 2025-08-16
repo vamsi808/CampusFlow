@@ -134,7 +134,7 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.avatarUrl || `https://i.pravatar.cc/150?u=${user.id}`} alt="User avatar" />
+                    <AvatarImage src={user.avatarUrl} alt="User avatar" />
                     <AvatarFallback>{user ? user.username.substring(0,2).toUpperCase() : 'G'}</AvatarFallback>
                     </Avatar>
                 </Button>
@@ -243,3 +243,5 @@ export function Header() {
     </header>
   );
 }
+
+    

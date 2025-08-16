@@ -55,7 +55,7 @@ const getStoredUsers = (): User[] => {
         fullName: 'Admin User', 
         email: 'admin@campusflow.app', 
         dateJoined: new Date().toISOString(), 
-        avatarUrl: `https://i.pravatar.cc/150?u=admin-user`,
+        avatarUrl: undefined,
         jobTitle: 'System Administrator',
         studentId: '001',
         status: 'approved',
@@ -174,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: firebaseUser.email || '',
           dateJoined: new Date().toISOString(),
           status: 'pending',
-          avatarUrl: `https://i.pravatar.cc/150?u=${firebaseUser.uid}`,
+          avatarUrl: undefined,
       };
       
       const updatedUsers = [...users, newUser];
@@ -231,3 +231,5 @@ export function useAuth() {
   }
   return context;
 }
+
+    
