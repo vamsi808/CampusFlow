@@ -21,6 +21,7 @@ const signupSchema = z.object({
   email: z.string().email('Invalid email address'),
   username: z.string().min(3, 'Username must be at least 3 characters'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string().min(6, "Please confirm your password"),
   studentId: z.string().min(1, 'ID is required'),
   role: z.enum(['student', 'faculty'], { required_error: 'Please select a role' }),
   department: z.string().optional(),
@@ -35,6 +36,9 @@ const signupSchema = z.object({
 }, {
     message: "Year of study cannot be greater than 4.",
     path: ['yearOfStudy'],
+}).refine(data => data.password === data.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
@@ -52,6 +56,7 @@ export default function SignupPage() {
       email: '',
       username: '',
       password: '',
+      confirmPassword: '',
       studentId: '',
       department: '',
       yearOfStudy: '',
@@ -104,24 +109,29 @@ export default function SignupPage() {
                 <FormField control={form.control} name="username" render={({ field }) => (
                     <FormItem><FormLabel>Username</FormLabel><FormControl><Input placeholder="Choose a username" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                <FormField control={form.control} name="password" render={({ field }) => (
-                    <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" placeholder="Create a password" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                 <FormField control={form.control} name="studentId" render={({ field }) => (
+                <FormField control={form.control} name="studentId" render={({ field }) => (
                     <FormItem><FormLabel>University ID</FormLabel><FormControl><Input placeholder="Enter your ID" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                <FormField control={form.control} name="role" render={({ field }) => (
-                    <FormItem><FormLabel>Role</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Select your role" /></SelectTrigger></FormControl>
-                            <SelectContent>
-                                <SelectItem value="student">Student</SelectItem>
-                                <SelectItem value="faculty">Faculty</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
+                 <FormField control={form.control} name="password" render={({ field }) => (
+                    <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" placeholder="Create a password" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
+                <FormField control={form.control} name="confirmPassword" render={({ field }) => (
+                    <FormItem><FormLabel>Confirm Password</FormLabel><FormControl><Input type="password" placeholder="Confirm your password" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <div className="md:col-span-2">
+                    <FormField control={form.control} name="role" render={({ field }) => (
+                        <FormItem><FormLabel>Role</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Select your role" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                    <SelectItem value="student">Student</SelectItem>
+                                    <SelectItem value="faculty">Faculty</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                </div>
 
                 {selectedRole === 'student' && (
                     <>

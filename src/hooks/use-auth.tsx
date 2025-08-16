@@ -157,12 +157,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = async (data: SignupData): Promise<void> => {
       if (!auth) throw new Error("Auth not initialized");
 
-      const {email, password, ...restData} = data;
+      const {email, password, username, ...restData} = data;
       if (!email || !password) throw new Error("Email and password are required for signup.");
 
       const users = getStoredUsers();
       if (users.some(u => u.email === email)) {
         throw new Error("An account with this email already exists.");
+      }
+      if (users.some(u => u.username === username)) {
+          throw new Error("This username is already taken. Please choose another one.");
       }
 
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -171,10 +174,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const newUser: User = {
           ...restData,
           id: firebaseUser.uid,
+          username,
           email: firebaseUser.email || '',
           dateJoined: new Date().toISOString(),
           status: 'pending',
-          avatarUrl: undefined,
+          avatarUrl: `https://i.pravatar.cc/150?u=${firebaseUser.uid}`,
       };
       
       const updatedUsers = [...users, newUser];
@@ -231,5 +235,3 @@ export function useAuth() {
   }
   return context;
 }
-
-    
