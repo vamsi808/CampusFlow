@@ -174,7 +174,7 @@ export default function SettingsPage() {
                     <FormItem><FormLabel>New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={passwordForm.control} name="confirmPassword" render={({ field }) => (
-                    <FormItem><FormLabel>Confirm New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Confirm New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormMessage>
                 )} />
                 <Button type="submit" disabled={passwordForm.formState.isSubmitting}>Update Password</Button>
                 </form>
@@ -388,4 +388,4 @@ export default function SettingsPage() {
     </div>
   );
 
-    
+}
