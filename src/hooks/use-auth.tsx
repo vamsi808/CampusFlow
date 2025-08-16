@@ -5,7 +5,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { useRouter } from 'next/navigation';
 import { app } from '@/lib/firebase'; // Import the initialized app
 import { 
-  getAuth, // Import getAuth
+  getAuth, 
   onAuthStateChanged, 
   GoogleAuthProvider, 
   signInWithPopup, 
@@ -54,7 +54,9 @@ const getStoredUsers = (): User[] => {
     const usersJson = localStorage.getItem(USERS_STORAGE_KEY);
     if (usersJson) {
         try {
-            return JSON.parse(usersJson);
+            const parsed = JSON.parse(usersJson);
+            // Default admin user might not have a proper ID, so ensure it does
+            return parsed.map((u: User) => u.username === 'admin' && !u.id ? {...u, id: 'admin-user'} : u);
         } catch (e) {
             console.error("Failed to parse users from localStorage", e);
             return [];
@@ -79,7 +81,9 @@ const getStoredUsers = (): User[] => {
 
 // Helper to store users in localStorage
 const setStoredUsers = (users: User[]) => {
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    if (typeof window !== 'undefined') {
+        localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    }
 }
 
 const mapFirebaseUserToAppUser = (firebaseUser: FirebaseUser, role: 'student' | 'faculty' | 'admin' = 'student'): User => {
@@ -106,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const users = getStoredUsers();
             let appUser = users.find(u => u.id === firebaseUser.uid);
             if (!appUser) {
+                // This case handles users who signed up with Google but aren't in our local storage yet.
                 appUser = mapFirebaseUserToAppUser(firebaseUser);
                 users.push(appUser);
                 setStoredUsers(users);
@@ -113,8 +118,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(appUser);
             localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(appUser));
         } else {
-            setUser(null);
-            localStorage.removeItem(SESSION_STORAGE_KEY);
+            // Also check for local admin session
+            const sessionJson = localStorage.getItem(SESSION_STORAGE_KEY);
+            if (sessionJson) {
+                const sessionUser = JSON.parse(sessionJson);
+                if (sessionUser.username === 'admin') {
+                    setUser(sessionUser);
+                } else {
+                    setUser(null);
+                    localStorage.removeItem(SESSION_STORAGE_KEY);
+                }
+            } else {
+                setUser(null);
+            }
         }
         setIsLoading(false);
     });
@@ -149,12 +165,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("Only institutional accounts (@mlrit.ac.in) are allowed.");
       }
       
-      // The onAuthStateChanged listener will handle setting the user state and navigating
+      const users = getStoredUsers();
+      let appUser = users.find(u => u.id === firebaseUser.uid);
+      if (!appUser) {
+        appUser = mapFirebaseUserToAppUser(firebaseUser);
+        users.push(appUser);
+        setStoredUsers(users);
+      }
+      
+      setUser(appUser);
+      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(appUser));
       router.push('/');
 
     } catch (error: any) {
-        // Since we sign out on failed domain check, we don't need complex catch logic.
-        // Let the UI component handle displaying the error.
         console.error("Google Sign-In Error:", error);
         if (auth.currentUser) {
             await signOut(auth);
@@ -186,14 +209,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const users = getStoredUsers();
       const updatedUsers = [...users, newUser];
       setStoredUsers(updatedUsers);
-      setUser(newUser);
-      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(newUser));
+      // Let onAuthStateChanged handle setting the user
   };
 
   const logout = async () => {
     const auth = getAuth(app);
-    await signOut(auth);
+    if (auth.currentUser) {
+        await signOut(auth);
+    }
     setUser(null);
+    localStorage.removeItem(SESSION_STORAGE_KEY);
     router.push('/login');
   };
   
