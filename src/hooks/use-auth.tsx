@@ -87,7 +87,7 @@ const setStoredUsers = (users: User[]) => {
     }
 }
 
-const mapFirebaseUserToAppUser = (firebaseUser: FirebaseUser, role: 'student' | 'faculty' | 'admin' = 'student'): User => {
+const mapFirebaseUserToAppUser = (firebaseUser: FirebaseUser): User => {
     return {
         id: firebaseUser.uid,
         email: firebaseUser.email || '',
@@ -95,7 +95,7 @@ const mapFirebaseUserToAppUser = (firebaseUser: FirebaseUser, role: 'student' | 
         username: firebaseUser.email?.split('@')[0] || 'newuser',
         avatarUrl: firebaseUser.photoURL || '',
         dateJoined: firebaseUser.metadata.creationTime || new Date().toISOString(),
-        role: role,
+        role: 'student', // Default role for new signups
     }
 }
 
@@ -172,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let appUser = users.find(u => u.id === firebaseUser.uid);
       
         if (!appUser) {
-            appUser = mapFirebaseUserToAppUser(firebaseUser, 'student');
+            appUser = mapFirebaseUserToAppUser(firebaseUser);
             users.push(appUser);
             setStoredUsers(users);
         }
