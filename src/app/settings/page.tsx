@@ -15,6 +15,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { Switch } from '@/components/ui/switch';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const profileSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),
@@ -92,6 +94,14 @@ export default function SettingsPage() {
       setTheme(newTheme);
       document.documentElement.className = newTheme;
       localStorage.setItem('theme', newTheme);
+  }
+
+  const handleFontSizeChange = (size: 'sm' | 'base' | 'lg') => {
+    // In a real app, you would likely set a class on the `<html>` or `<body>` tag
+    // and use CSS variables to adjust font sizes throughout the application.
+    // For this demo, we'll just log the change.
+    console.log("Font size changed to:", size);
+    toast({ title: "Font Size Updated", description: `Font size set to ${size}. (Demo)`});
   }
 
   if (isLoading || !user) {
@@ -195,6 +205,102 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Accessibility</CardTitle>
+          <CardDescription>Adjust settings to improve your experience.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+            <div className="space-y-2">
+                <h3 className="font-medium">Font Size</h3>
+                <p className="text-sm text-muted-foreground">Adjust the application's font size for better readability.</p>
+            </div>
+            <RadioGroup defaultValue="base" onValueChange={(val) => handleFontSizeChange(val as any)} className="flex items-center gap-4">
+                <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl><RadioGroupItem value="sm" id="font-sm" /></FormControl>
+                    <FormLabel htmlFor="font-sm" className="font-normal">Small</FormLabel>
+                </FormItem>
+                <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl><RadioGroupItem value="base" id="font-base" /></FormControl>
+                    <FormLabel htmlFor="font-base" className="font-normal">Default</FormLabel>
+                </FormItem>
+                <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl><RadioGroupItem value="lg" id="font-lg" /></FormControl>
+                    <FormLabel htmlFor="font-lg" className="font-normal">Large</FormLabel>
+                </FormItem>
+            </RadioGroup>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+            <CardTitle>Notifications</CardTitle>
+            <CardDescription>Manage how you receive notifications from us.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+             <div className="space-y-4">
+                <h3 className="font-medium">Channels</h3>
+                 <div className="flex items-center justify-between p-4 border rounded-md">
+                     <div>
+                        <h4 className="font-normal">Email Notifications</h4>
+                        <p className="text-sm text-muted-foreground">Receive notifications via your registered email.</p>
+                     </div>
+                     <Switch id="email-notifications" defaultChecked />
+                 </div>
+                 <div className="flex items-center justify-between p-4 border rounded-md">
+                     <div>
+                        <h4 className="font-normal">SMS Alerts</h4>
+                        <p className="text-sm text-muted-foreground">Get critical alerts via text message (charges may apply).</p>
+                     </div>
+                     <Switch id="sms-alerts" />
+                 </div>
+                 <div className="flex items-center justify-between p-4 border rounded-md">
+                     <div>
+                        <h4 className="font-normal">Push Notifications</h4>
+                        <p className="text-sm text-muted-foreground">Receive notifications directly on your device.</p>
+                     </div>
+                     <Switch id="push-notifications" />
+                 </div>
+             </div>
+             <Separator />
+             <div className="space-y-4">
+                 <h3 className="font-medium">Notification Types</h3>
+                 <p className="text-sm text-muted-foreground">Select the types of notifications you want to receive.</p>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex items-start space-x-3">
+                        <Checkbox id="notif-confirmations" defaultChecked />
+                        <div className="grid gap-1.5 leading-none">
+                            <label htmlFor="notif-confirmations" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Booking Confirmations</label>
+                            <p className="text-sm text-muted-foreground">Get notified when your booking is confirmed.</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                        <Checkbox id="notif-reminders" defaultChecked />
+                        <div className="grid gap-1.5 leading-none">
+                            <label htmlFor="notif-reminders" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Reminders</label>
+                            <p className="text-sm text-muted-foreground">Receive reminders for your upcoming bookings.</p>
+                        </div>
+                    </div>
+                     <div className="flex items-start space-x-3">
+                        <Checkbox id="notif-approvals" defaultChecked />
+                        <div className="grid gap-1.5 leading-none">
+                            <label htmlFor="notif-approvals" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Approval Status</label>
+                            <p className="text-sm text-muted-foreground">Alerts for your account approval status.</p>
+                        </div>
+                    </div>
+                     <div className="flex items-start space-x-3">
+                        <Checkbox id="notif-system" />
+                        <div className="grid gap-1.5 leading-none">
+                            <label htmlFor="notif-system" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">System Announcements</label>
+                            <p className="text-sm text-muted-foreground">Receive news and updates from the platform.</p>
+                        </div>
+                    </div>
+                 </div>
+             </div>
+        </CardContent>
+      </Card>
+
 
       <Card>
         <CardHeader>
@@ -234,4 +340,3 @@ export default function SettingsPage() {
       </Card>
     </div>
   );
-}
