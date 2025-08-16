@@ -16,6 +16,17 @@ import { useToast } from '@/hooks/use-toast';
 import { UserPlus } from 'lucide-react';
 import Link from 'next/link';
 
+const departments = [
+    "Computer Science and Engineering",
+    "Computer Science and Engineering Specialized in Data Science",
+    "Computer Science and Engineering Specialized in Artificial Intelligence & Machine Learning",
+    "Information Technology",
+    "Electronics and Communication Engineering",
+    "Electrical and Electronics Engineering",
+    "Mechanical Engineering",
+    "Aerospace Engineering"
+];
+
 const signupSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),
   email: z.string().email('Invalid email address'),
@@ -27,6 +38,9 @@ const signupSchema = z.object({
   department: z.string().optional(),
   yearOfStudy: z.string().optional(),
   jobTitle: z.string().optional(),
+  section: z.string().optional().refine(val => !val || /^[A-Z]$/.test(val), {
+      message: "Section must be a single uppercase letter.",
+  }),
 }).refine(data => {
     if (data.role === 'student' && data.yearOfStudy) {
         const year = parseInt(data.yearOfStudy.replace(/\D/g, ''), 10);
@@ -61,6 +75,7 @@ export default function SignupPage() {
       department: '',
       yearOfStudy: '',
       jobTitle: '',
+      section: '',
     },
   });
 
@@ -136,10 +151,20 @@ export default function SignupPage() {
                 {selectedRole === 'student' && (
                     <>
                         <FormField control={form.control} name="department" render={({ field }) => (
-                            <FormItem><FormLabel>Department</FormLabel><FormControl><Input placeholder="e.g. Computer Science" {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Department</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Select your department" /></SelectTrigger></FormControl>
+                                    <SelectContent>
+                                        {departments.map(dep => <SelectItem key={dep} value={dep}>{dep}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            <FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="yearOfStudy" render={({ field }) => (
                             <FormItem><FormLabel>Year of Study</FormLabel><FormControl><Input placeholder="e.g. 3 or 3rd Year" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                         <FormField control={form.control} name="section" render={({ field }) => (
+                            <FormItem><FormLabel>Section</FormLabel><FormControl><Input placeholder="e.g. A" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                     </>
                 )}
@@ -147,7 +172,14 @@ export default function SignupPage() {
                 {selectedRole === 'faculty' && (
                      <>
                         <FormField control={form.control} name="department" render={({ field }) => (
-                            <FormItem><FormLabel>Department</FormLabel><FormControl><Input placeholder="e.g. Physics" {...field} /></FormControl><FormMessage /></FormItem>
+                             <FormItem><FormLabel>Department</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Select your department" /></SelectTrigger></FormControl>
+                                    <SelectContent>
+                                        {departments.map(dep => <SelectItem key={dep} value={dep}>{dep}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            <FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="jobTitle" render={({ field }) => (
                             <FormItem><FormLabel>Job Title</FormLabel><FormControl><Input placeholder="e.g. Associate Professor" {...field} /></FormControl><FormMessage /></FormItem>

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { allResources, userReservations } from '@/lib/data';
 import { format, formatDistanceToNow, isPast, isFuture, getMonth } from 'date-fns';
-import { User, Mail, Calendar, LogOut, Briefcase, Edit, Clock, BarChart2, Pencil, Building, GraduationCap, Award, CalendarClock, CalendarCheck, TrendingUp, PieChart } from 'lucide-react';
+import { User, Mail, Calendar, LogOut, Briefcase, Edit, Clock, BarChart2, Pencil, Building, GraduationCap, Award, CalendarClock, CalendarCheck, TrendingUp, PieChart, Users as SectionIcon } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -30,6 +30,7 @@ const profileSchema = z.object({
   department: z.string().optional(),
   yearOfStudy: z.string().optional(),
   jobTitle: z.string().optional(),
+  section: z.string().optional(),
 });
 
 
@@ -100,6 +101,7 @@ export default function ProfilePage() {
       department: user?.department || '',
       yearOfStudy: user?.yearOfStudy || '',
       jobTitle: user?.jobTitle || '',
+      section: user?.section || '',
     }
   });
 
@@ -122,6 +124,7 @@ export default function ProfilePage() {
             department: user.department || '',
             yearOfStudy: user.yearOfStudy || '',
             jobTitle: user.jobTitle || '',
+            section: user.section || '',
         });
     }
   }, [user, profileForm]);
@@ -190,7 +193,7 @@ export default function ProfilePage() {
                     <div className="relative group">
                         <Avatar className="w-24 h-24 mb-4 border-2 border-primary">
                             <AvatarImage src={user.avatarUrl} alt={user.username} />
-                            <AvatarFallback>{user.username.substring(0,2).toUpperCase()}</AvatarFallback>
+                            <AvatarFallback>{user.fullName ? user.fullName.split(' ').map(n => n[0]).join('') : user.username.substring(0,2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <Dialog open={isAvatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
                             <DialogTrigger asChild>
@@ -252,6 +255,12 @@ export default function ProfilePage() {
                                 <span>{user.department}</span>
                             </div>
                         )}
+                        {user.section && (
+                             <div className="flex items-center gap-3">
+                                <SectionIcon className="w-4 h-4 text-primary" />
+                                <span>Section: {user.section}</span>
+                            </div>
+                        )}
                         <div className="flex items-center gap-3">
                             <Calendar className="w-4 h-4 text-primary" />
                             <span>Joined {user.dateJoined ? formatDistanceToNow(new Date(user.dateJoined), { addSuffix: true }) : 'recently'}</span>
@@ -285,9 +294,14 @@ export default function ProfilePage() {
                                     )} />
 
                                     {user.role === 'student' && (
-                                        <FormField control={profileForm.control} name="yearOfStudy" render={({ field }) => (
-                                            <FormItem><FormLabel>Year of Study</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                                        )} />
+                                        <>
+                                            <FormField control={profileForm.control} name="yearOfStudy" render={({ field }) => (
+                                                <FormItem><FormLabel>Year of Study</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                            <FormField control={profileForm.control} name="section" render={({ field }) => (
+                                                <FormItem><FormLabel>Section</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                        </>
                                     )}
 
                                     {(user.role === 'faculty' || user.role === 'admin') && (
@@ -432,7 +446,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
-
-    

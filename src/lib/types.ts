@@ -42,4 +42,5 @@ export interface User {
   jobTitle?: string;
   status: 'pending' | 'approved' | 'rejected';
   avatarUrl?: string;
+  section?: string;
 }
