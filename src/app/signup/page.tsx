@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
 const departments = [
@@ -62,6 +62,8 @@ export default function SignupPage() {
   const { signup } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -128,10 +130,32 @@ export default function SignupPage() {
                     <FormItem><FormLabel>University ID</FormLabel><FormControl><Input placeholder="Enter your ID" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                  <FormField control={form.control} name="password" render={({ field }) => (
-                    <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" placeholder="Create a password" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Password</FormLabel>
+                        <FormControl>
+                            <div className="relative">
+                                <Input type={showPassword ? "text" : "password"} placeholder="Create a password" {...field} />
+                                <Button type="button" variant="ghost" size="icon" className="absolute top-0 right-0 h-full px-3" onClick={() => setShowPassword(prev => !prev)}>
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    <span className="sr-only">{showPassword ? "Hide" : "Show"} password</span>
+                                </Button>
+                            </div>
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
                 )} />
                 <FormField control={form.control} name="confirmPassword" render={({ field }) => (
-                    <FormItem><FormLabel>Confirm Password</FormLabel><FormControl><Input type="password" placeholder="Confirm your password" {...field} /></FormControl><FormMessage /></FormItem>
+                     <FormItem><FormLabel>Confirm Password</FormLabel>
+                        <FormControl>
+                            <div className="relative">
+                                <Input type={showConfirmPassword ? "text" : "password"} placeholder="Confirm your password" {...field} />
+                                <Button type="button" variant="ghost" size="icon" className="absolute top-0 right-0 h-full px-3" onClick={() => setShowConfirmPassword(prev => !prev)}>
+                                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    <span className="sr-only">{showConfirmPassword ? "Hide" : "Show"} password</span>
+                                </Button>
+                            </div>
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
                 )} />
                 <div className="md:col-span-2">
                     <FormField control={form.control} name="role" render={({ field }) => (
