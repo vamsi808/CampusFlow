@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
 const profileSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),
@@ -217,18 +218,18 @@ export default function SettingsPage() {
                 <p className="text-sm text-muted-foreground">Adjust the application's font size for better readability.</p>
             </div>
             <RadioGroup defaultValue="base" onValueChange={(val) => handleFontSizeChange(val as any)} className="flex items-center gap-4">
-                <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl><RadioGroupItem value="sm" id="font-sm" /></FormControl>
-                    <FormLabel htmlFor="font-sm" className="font-normal">Small</FormLabel>
-                </FormItem>
-                <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl><RadioGroupItem value="base" id="font-base" /></FormControl>
-                    <FormLabel htmlFor="font-base" className="font-normal">Default</FormLabel>
-                </FormItem>
-                <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl><RadioGroupItem value="lg" id="font-lg" /></FormControl>
-                    <FormLabel htmlFor="font-lg" className="font-normal">Large</FormLabel>
-                </FormItem>
+                <div className="flex items-center space-x-3 space-y-0">
+                    <RadioGroupItem value="sm" id="font-sm" />
+                    <Label htmlFor="font-sm" className="font-normal">Small</Label>
+                </div>
+                <div className="flex items-center space-x-3 space-y-0">
+                    <RadioGroupItem value="base" id="font-base" />
+                    <Label htmlFor="font-base" className="font-normal">Default</Label>
+                </div>
+                <div className="flex items-center space-x-3 space-y-0">
+                    <RadioGroupItem value="lg" id="font-lg" />
+                    <Label htmlFor="font-lg" className="font-normal">Large</Label>
+                </div>
             </RadioGroup>
         </CardContent>
       </Card>
@@ -340,3 +341,5 @@ export default function SettingsPage() {
       </Card>
     </div>
   );
+
+    
