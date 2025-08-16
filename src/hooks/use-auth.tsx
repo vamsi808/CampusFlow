@@ -88,14 +88,18 @@ const setStoredUsers = (users: User[]) => {
 }
 
 const mapFirebaseUserToAppUser = (firebaseUser: FirebaseUser): User => {
+    const username = firebaseUser.email?.split('@')[0] || `user_${firebaseUser.uid.substring(0,5)}`;
     return {
         id: firebaseUser.uid,
         email: firebaseUser.email || '',
-        fullName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'New User',
-        username: firebaseUser.email?.split('@')[0] || 'newuser',
+        fullName: firebaseUser.displayName || username,
+        username: username,
         avatarUrl: firebaseUser.photoURL || '',
         dateJoined: firebaseUser.metadata.creationTime || new Date().toISOString(),
         role: 'student', // Default role for new signups
+        studentId: `G-${firebaseUser.uid.substring(0,8)}`, // Placeholder ID
+        department: '',
+        yearOfStudy: '',
     }
 }
 
@@ -116,12 +120,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (appUser) {
                 setUser(appUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(appUser));
+            } else {
+                 // This can happen if user exists in Firebase but not in local storage
+                 // Let's create a local record for them.
+                 const newAppUser = mapFirebaseUserToAppUser(firebaseUser);
+                 const newUsersList = [...users, newAppUser];
+                 setStoredUsers(newUsersList);
+                 setUser(newAppUser);
+                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(newAppUser));
             }
         } else {
             const sessionJson = localStorage.getItem(SESSION_STORAGE_KEY);
             if (sessionJson) {
                 try {
                     const sessionUser = JSON.parse(sessionJson);
+                     // Persist admin session, clear others
                      if (sessionUser.username !== 'admin') {
                        localStorage.removeItem(SESSION_STORAGE_KEY);
                        setUser(null);
@@ -140,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   const login = async (email: string, password: string): Promise<void> => {
     if (!auth) throw new Error("Auth not initialized");
@@ -150,10 +163,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (adminUser) {
             setUser(adminUser);
             localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(adminUser));
+            router.push('/');
             return;
         }
     }
     await signInWithEmailAndPassword(auth, email, password);
+    router.push('/');
   };
   
   const loginWithGoogle = async (): Promise<void> => {
@@ -165,6 +180,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (!firebaseUser.email || !firebaseUser.email.endsWith('@mlrit.ac.in')) {
             await signOut(auth);
+            setUser(null);
+            localStorage.removeItem(SESSION_STORAGE_KEY);
             throw new Error("Only institutional accounts (@mlrit.ac.in) are allowed.");
         }
         
@@ -187,6 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         setUser(null);
         localStorage.removeItem(SESSION_STORAGE_KEY);
+        // Re-throw the error so the UI can catch it.
         throw error;
     }
   }
@@ -195,10 +213,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!auth) throw new Error("Auth not initialized");
       const {email, password, ...restData} = data;
       if (!email || !password) throw new Error("Email and password are required for signup.");
-
-      if (!email.endsWith('@mlrit.ac.in')) {
-        throw new Error("Only institutional accounts (@mlrit.ac.in) are allowed to sign up.");
-      }
 
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
@@ -231,6 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!user) {
             return reject(new Error("No user is logged in to update."));
         }
+        // Using a timeout to simulate an async operation
         setTimeout(() => {
             const users = getStoredUsers();
             const userIndex = users.findIndex(u => u.id === user.id);
