@@ -97,7 +97,7 @@ export default function SettingsPage() {
       setTheme(newTheme);
       document.documentElement.className = newTheme;
       localStorage.setItem('theme', newTheme);
-  }
+  };
 
   const handleFontSizeChange = (size: 'sm' | 'base' | 'lg') => {
     // In a real app, you would likely set a class on the `<html>` or `<body>` tag
@@ -105,7 +105,7 @@ export default function SettingsPage() {
     // For this demo, we'll just log the change.
     console.log("Font size changed to:", size);
     toast({ title: "Font Size Updated", description: `Font size set to ${size}. (Demo)`});
-  }
+  };
 
   if (isLoading || !user) {
     return (
@@ -121,7 +121,7 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
         </div>
-    )
+    );
   }
 
   return (
@@ -388,3 +388,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
