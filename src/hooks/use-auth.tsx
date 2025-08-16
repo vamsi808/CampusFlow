@@ -140,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, []);
 
   const login = async (email: string, password: string): Promise<void> => {
     if (!auth) throw new Error("Auth not initialized");
@@ -217,9 +217,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    const currentAuth = getAuth(app);
-    if (currentAuth.currentUser) {
-        await signOut(currentAuth);
+    if (!auth) return;
+    if (auth.currentUser) {
+        await signOut(auth);
     }
     setUser(null);
     localStorage.removeItem(SESSION_STORAGE_KEY);
@@ -264,5 +264,3 @@ export function useAuth() {
   }
   return context;
 }
-
-    
