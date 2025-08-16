@@ -135,13 +135,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const loginWithGoogle = async (): Promise<void> => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-    router.push('/');
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const firebaseUser = result.user;
+
+      if (firebaseUser.email && firebaseUser.email.endsWith('@mlrit.ac.in')) {
+        router.push('/');
+      } else {
+        await signOut(auth);
+        throw new Error("Only institutional accounts (@mlrit.ac.in) are allowed.");
+      }
+    } catch (error: any) {
+      // Don't sign out if the error is from the restriction check, as we already did.
+      if (error.message !== "Only institutional accounts (@mlrit.ac.in) are allowed.") {
+        await signOut(auth).catch(); // Attempt to sign out to clear state
+      }
+      // Re-throw the original error to be caught by the UI component
+      throw error;
+    }
   }
 
   const signup = async (data: SignupData): Promise<void> => {
       const {email, password, ...restData} = data;
       if (!email || !password) throw new Error("Email and password are required for signup.");
+
+      if (!email.endsWith('@mlrit.ac.in')) {
+        throw new Error("Only institutional accounts (@mlrit.ac.in) are allowed to sign up.");
+      }
 
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;

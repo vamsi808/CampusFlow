@@ -19,7 +19,10 @@ import { Separator } from '@/components/ui/separator';
 
 const signupSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address').refine(
+    (email) => email.endsWith('@mlrit.ac.in'),
+    { message: 'Only institutional accounts (@mlrit.ac.in) are allowed.' }
+  ),
   username: z.string().min(3, 'Username must be at least 3 characters'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   studentId: z.string().min(1, 'ID is required'),
@@ -110,7 +113,7 @@ export default function SignupPage() {
                     <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="Enter your full name" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="Enter your email" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="your.name@mlrit.ac.in" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="username" render={({ field }) => (
                     <FormItem><FormLabel>Username</FormLabel><FormControl><Input placeholder="Choose a username" {...field} /></FormControl><FormMessage /></FormItem>
