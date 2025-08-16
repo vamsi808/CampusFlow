@@ -139,19 +139,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await signInWithPopup(auth, provider);
       const firebaseUser = result.user;
 
-      if (firebaseUser.email && firebaseUser.email.endsWith('@mlrit.ac.in')) {
-        router.push('/');
-      } else {
-        await signOut(auth);
+      if (!firebaseUser.email || !firebaseUser.email.endsWith('@mlrit.ac.in')) {
+        await signOut(auth); // Immediately sign out the user from Firebase
         throw new Error("Only institutional accounts (@mlrit.ac.in) are allowed.");
       }
+      
+      // The onAuthStateChanged listener will handle setting the user state and navigating
+      router.push('/');
+
     } catch (error: any) {
-      // Don't sign out if the error is from the restriction check, as we already did.
-      if (error.message !== "Only institutional accounts (@mlrit.ac.in) are allowed.") {
-        await signOut(auth).catch(); // Attempt to sign out to clear state
-      }
-      // Re-throw the original error to be caught by the UI component
-      throw error;
+        // Since we sign out on failed domain check, we don't need complex catch logic.
+        // Let the UI component handle displaying the error.
+        console.error("Google Sign-In Error:", error);
+        throw error;
     }
   }
 
