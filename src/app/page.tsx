@@ -8,6 +8,7 @@ import { allResources, resourceTypes, locations } from '@/lib/data';
 import type { Resource } from '@/lib/types';
 import { ResourceCard } from '@/components/resource-card';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function ResourceBrowserPage() {
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -15,20 +16,33 @@ export default function ResourceBrowserPage() {
   const [locationFilter, setLocationFilter] = React.useState('all');
   const [capacityFilter, setCapacityFilter] = React.useState(0);
   const [isClient, setIsClient] = React.useState(false);
+  const { user } = useAuth();
 
   React.useEffect(() => {
     setIsClient(true);
   }, []);
 
+  const availableResources = React.useMemo(() => {
+    if (!user) {
+      // Show all student resources for logged-out users
+      return allResources.filter(resource => resource.resourceFor === 'student');
+    }
+    // Filter based on user role
+    return allResources.filter(resource => resource.resourceFor === user.role);
+  }, [user]);
+
   const filteredResources = React.useMemo(() => {
-    return allResources.filter(resource => {
+    return availableResources.filter(resource => {
       const matchesSearch = resource.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesType = typeFilter === 'all' || resource.type === typeFilter;
       const matchesLocation = locationFilter === 'all' || resource.location === locationFilter;
       const matchesCapacity = capacityFilter === 0 || resource.capacity >= capacityFilter;
       return matchesSearch && matchesType && matchesLocation && matchesCapacity;
     });
-  }, [searchTerm, typeFilter, locationFilter, capacityFilter]);
+  }, [searchTerm, typeFilter, locationFilter, capacityFilter, availableResources]);
+
+  const uniqueTypes = [...new Set(availableResources.map(r => r.type))];
+  const uniqueLocations = [...new Set(availableResources.map(r => r.location))];
 
   return (
     <div className="space-y-8">
@@ -50,7 +64,7 @@ export default function ResourceBrowserPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
-            {resourceTypes.map(type => (
+            {uniqueTypes.map(type => (
               <SelectItem key={type} value={type}>{type}</SelectItem>
             ))}
           </SelectContent>
@@ -61,7 +75,7 @@ export default function ResourceBrowserPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Locations</SelectItem>
-            {locations.map(location => (
+            {uniqueLocations.map(location => (
               <SelectItem key={location} value={location}>{location}</SelectItem>
             ))}
           </SelectContent>

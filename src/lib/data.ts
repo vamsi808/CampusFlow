@@ -110,6 +110,7 @@ const initialResources: Resource[] = [
     capacity: 4,
     imageUrl: 'https://placehold.co/600x400.png',
     description: 'A quiet, enclosed space perfect for individual or small group study.',
+    resourceFor: 'student',
   },
   {
     id: 'lib-sr-2',
@@ -119,6 +120,7 @@ const initialResources: Resource[] = [
     capacity: 8,
     imageUrl: 'https://placehold.co/600x400.png',
     description: 'A large room with a whiteboard, ideal for group projects and discussions.',
+    resourceFor: 'student',
   },
   {
     id: 'sci-lab-2',
@@ -128,6 +130,7 @@ const initialResources: Resource[] = [
     capacity: 1,
     imageUrl: 'https://placehold.co/600x400.png',
     description: 'High-powered electron microscope for advanced biological research.',
+    resourceFor: 'faculty',
   },
   {
     id: 'mus-aud-1',
@@ -137,6 +140,7 @@ const initialResources: Resource[] = [
     capacity: 200,
     imageUrl: 'https://placehold.co/600x400.png',
     description: 'Large auditorium for performances, lectures, and major events.',
+    resourceFor: 'faculty',
   },
   {
     id: 'lib-sr-3',
@@ -146,6 +150,7 @@ const initialResources: Resource[] = [
     capacity: 6,
     imageUrl: 'https://placehold.co/600x400.png',
     description: 'Equipped with a large screen and comfortable seating for media viewing.',
+    resourceFor: 'student',
   },
   {
     id: 'art-studio-1',
@@ -155,6 +160,7 @@ const initialResources: Resource[] = [
     capacity: 1,
     imageUrl: 'https://placehold.co/600x400.png',
     description: 'Professional-grade pottery wheel for ceramic projects.',
+    resourceFor: 'student',
   },
   {
     id: 'rec-gym-1',
@@ -164,6 +170,7 @@ const initialResources: Resource[] = [
     capacity: 100,
     imageUrl: 'https://placehold.co/600x400.png',
     description: 'Full-size gymnasium for basketball, volleyball, and other indoor sports.',
+    resourceFor: 'student',
   },
   {
     id: 'rec-tennis-1',
@@ -173,6 +180,7 @@ const initialResources: Resource[] = [
     capacity: 4,
     imageUrl: 'https://placehold.co/600x400.png',
     description: 'Outdoor tennis court with high-quality surface.',
+    resourceFor: 'student',
   }
 ].map(r => ({ ...r, schedule: [] }));
 
@@ -187,8 +195,8 @@ if (typeof window !== 'undefined' && !localStorage.getItem(BOOKINGS_STORAGE_KEY)
 
 // Now, all functions will read from and write to localStorage via these getters
 export const allResources = ((): Resource[] => {
-    const resources = getFromStorage(RESOURCES_STORAGE_KEY, []);
-    const bookings = getFromStorage(BOOKINGS_STORAGE_KEY, []);
+    const resources = getFromStorage<Resource>(RESOURCES_STORAGE_KEY, []);
+    const bookings = getFromStorage<Booking>(BOOKINGS_STORAGE_KEY, []);
     
     // Attach schedules to resources
     return resources.map(resource => ({
@@ -210,7 +218,7 @@ export const userReservations = (userId: string): Booking[] => {
 
 export const userNotifications = (userId: string): Notification[] => {
     const reservations = userReservations(userId);
-    const resources = getFromStorage(RESOURCES_STORAGE_KEY, []);
+    const resources = getFromStorage<Resource>(RESOURCES_STORAGE_KEY, []);
     return reservations
         .filter(res => res.startTime > new Date())
         .map((res, index) => {
@@ -225,13 +233,13 @@ export const userNotifications = (userId: string): Notification[] => {
 };
 
 export const deleteResource = (id: string) => {
-  let resources = getFromStorage(RESOURCES_STORAGE_KEY, []);
+  let resources = getFromStorage<Resource>(RESOURCES_STORAGE_KEY, []);
   resources = resources.filter(r => r.id !== id);
   setInStorage(RESOURCES_STORAGE_KEY, resources);
 }
 
 export const addResource = (resource: Omit<Resource, 'schedule' | 'id'>) => {
-  let resources = getFromStorage(RESOURCES_STORAGE_KEY, []);
+  let resources = getFromStorage<Resource>(RESOURCES_STORAGE_KEY, []);
   const newResource: Resource = {
     ...resource,
     id: `new-${Math.random().toString(36).substr(2, 9)}`,

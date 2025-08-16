@@ -9,6 +9,7 @@ export interface Resource {
   imageUrl: string;
   description: string;
   schedule?: Booking[];
+  resourceFor: 'student' | 'faculty';
 }
 
 export interface Booking {
