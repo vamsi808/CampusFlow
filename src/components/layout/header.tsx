@@ -12,7 +12,8 @@ import {
   User,
   Shield,
   LogOut,
-  UserPlus
+  UserPlus,
+  UserCheck
 } from 'lucide-react';
 
 import {
@@ -47,6 +48,7 @@ const navLinks = [
 
 const adminLinks = [
     { href: '/admin', label: 'Admin', icon: Shield },
+    { href: '/admin/approvals', label: 'Approvals', icon: UserCheck },
 ];
 
 export function Header() {

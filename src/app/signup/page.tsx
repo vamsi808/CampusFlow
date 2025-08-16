@@ -18,10 +18,7 @@ import Link from 'next/link';
 
 const signupSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),
-  email: z.string().email('Invalid email address').refine(
-    (email) => email.endsWith('@mlrit.ac.in'),
-    { message: 'Only institutional accounts (@mlrit.ac.in) are allowed.' }
-  ),
+  email: z.string().email('Invalid email address'),
   username: z.string().min(3, 'Username must be at least 3 characters'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   studentId: z.string().min(1, 'ID is required'),
@@ -29,6 +26,15 @@ const signupSchema = z.object({
   department: z.string().optional(),
   yearOfStudy: z.string().optional(),
   jobTitle: z.string().optional(),
+}).refine(data => {
+    if (data.role === 'student' && data.yearOfStudy) {
+        const year = parseInt(data.yearOfStudy.replace(/\D/g, ''), 10);
+        return !isNaN(year) && year <= 4;
+    }
+    return true;
+}, {
+    message: "Year of study cannot be greater than 4.",
+    path: ['yearOfStudy'],
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
@@ -63,8 +69,8 @@ export default function SignupPage() {
     try {
       await signup(data);
       toast({
-        title: 'Account Created',
-        description: "You've been successfully signed up. Please log in.",
+        title: 'Request Sent',
+        description: "Your registration request has been sent to the admin for approval.",
       });
       router.push('/login');
     } catch (error) {
@@ -83,7 +89,7 @@ export default function SignupPage() {
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Create an Account</CardTitle>
-          <CardDescription>Join CampusFlow to book resources</CardDescription>
+          <CardDescription>Join CampusFlow to book resources. Your account will require admin approval.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -93,7 +99,7 @@ export default function SignupPage() {
                     <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="Enter your full name" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="your.name@mlrit.ac.in" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="your.name@example.com" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="username" render={({ field }) => (
                     <FormItem><FormLabel>Username</FormLabel><FormControl><Input placeholder="Choose a username" {...field} /></FormControl><FormMessage /></FormItem>
@@ -123,7 +129,7 @@ export default function SignupPage() {
                             <FormItem><FormLabel>Department</FormLabel><FormControl><Input placeholder="e.g. Computer Science" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="yearOfStudy" render={({ field }) => (
-                            <FormItem><FormLabel>Year of Study</FormLabel><FormControl><Input placeholder="e.g. 3rd Year" {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Year of Study</FormLabel><FormControl><Input placeholder="e.g. 3 or 3rd Year" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                     </>
                 )}
@@ -141,7 +147,7 @@ export default function SignupPage() {
 
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Creating Account...' : 'Sign Up with Email'}
+                {isLoading ? 'Submitting Request...' : 'Request Account'}
                 <UserPlus className="ml-2 h-4 w-4" />
               </Button>
             </form>

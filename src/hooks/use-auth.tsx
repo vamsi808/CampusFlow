@@ -13,27 +13,13 @@ import {
   createUserWithEmailAndPassword,
   Auth
 } from "firebase/auth";
+import type { User } from '@/lib/types';
+import { useToast } from './use-toast';
 
 const USERS_STORAGE_KEY = 'campus-flow-users';
 const SESSION_STORAGE_KEY = 'campus-flow-session';
 
-
-interface User {
-  id: string;
-  username: string;
-  role: 'student' | 'faculty' | 'admin';
-  password? : string; // In a real app, this would be a hash
-  fullName?: string;
-  email?: string;
-  dateJoined?: string;
-  avatarUrl?: string;
-  department?: string;
-  yearOfStudy?: string;
-  studentId?: string;
-  jobTitle?: string;
-}
-
-type SignupData = Omit<User, 'id' | 'dateJoined'>;
+type SignupData = Omit<User, 'id' | 'dateJoined' | 'status'>;
 
 interface AuthContextType {
   user: User | null;
@@ -54,7 +40,7 @@ const getStoredUsers = (): User[] => {
         try {
             const parsed = JSON.parse(usersJson);
             // Default admin user might not have a proper ID, so ensure it does
-            return parsed.map((u: User) => u.username === 'admin' && !u.id ? {...u, id: 'admin-user'} : u);
+            return parsed.map((u: User) => u.username === 'admin' && !u.id ? {...u, id: 'admin-user', status: 'approved'} : u);
         } catch (e) {
             console.error("Failed to parse users from localStorage", e);
             return [];
@@ -71,7 +57,8 @@ const getStoredUsers = (): User[] => {
         dateJoined: new Date().toISOString(), 
         avatarUrl: '',
         jobTitle: 'System Administrator',
-        studentId: '001'
+        studentId: '001',
+        status: 'approved',
     };
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify([adminUser]));
     return [adminUser];
@@ -89,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [auth, setAuth] = useState<Auth | null>(null);
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     const authInstance = getAuth(app);
@@ -98,20 +86,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (firebaseUser) {
             const users = getStoredUsers();
             const appUser = users.find(u => u.id === firebaseUser.uid);
-            if (appUser) {
+            if (appUser && appUser.status === 'approved') {
                 setUser(appUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(appUser));
+            } else {
+                 if (appUser && appUser.status !== 'approved') {
+                     toast({ variant: 'destructive', title: 'Login Failed', description: 'Your account is not approved yet.' });
+                 }
+                signOut(authInstance); // Sign out if not approved
+                setUser(null);
+                localStorage.removeItem(SESSION_STORAGE_KEY);
             }
         } else {
             const sessionJson = localStorage.getItem(SESSION_STORAGE_KEY);
             if (sessionJson) {
                 try {
                     const sessionUser = JSON.parse(sessionJson);
-                     if (sessionUser.username !== 'admin') {
+                     if (sessionUser.username === 'admin') {
+                       setUser(sessionUser)
+                    } else {
                        localStorage.removeItem(SESSION_STORAGE_KEY);
                        setUser(null);
-                    } else {
-                       setUser(sessionUser)
                     }
                 } catch (error) {
                     setUser(null);
@@ -125,13 +120,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [toast]);
 
   const login = async (email: string, password: string): Promise<void> => {
     if (!auth) throw new Error("Auth not initialized");
+    
+    const users = getStoredUsers();
 
     if ((email === 'admin' || email === 'admin@campusflow.app') && password === 'admin@123') {
-        const users = getStoredUsers();
         const adminUser = users.find(u => u.username === 'admin');
         if (adminUser) {
             setUser(adminUser);
@@ -140,6 +136,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return;
         }
     }
+    
+    // Find user by email to check status before attempting Firebase login
+    const potentialUser = users.find(u => u.email === email);
+    if (potentialUser && potentialUser.status !== 'approved') {
+        const message = potentialUser.status === 'pending'
+            ? 'Your account is pending approval.'
+            : 'Your account has been rejected.';
+        throw new Error(message);
+    }
+    
+    if (!potentialUser && email !== 'admin@campusflow.app') {
+      throw new Error("User not found. Please sign up first.");
+    }
+
     await signInWithEmailAndPassword(auth, email, password);
     router.push('/');
   };
@@ -150,6 +160,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const {email, password, ...restData} = data;
       if (!email || !password) throw new Error("Email and password are required for signup.");
 
+      const users = getStoredUsers();
+      if (users.some(u => u.email === email)) {
+        throw new Error("An account with this email already exists.");
+      }
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
 
@@ -158,12 +173,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: firebaseUser.uid,
           email: firebaseUser.email || '',
           dateJoined: new Date().toISOString(),
+          status: 'pending',
           avatarUrl: '',
       };
       
-      const users = getStoredUsers();
       const updatedUsers = [...users, newUser];
       setStoredUsers(updatedUsers);
+
+      // We should immediately sign the user out after registration as they need approval
+      await signOut(auth);
   };
 
   const logout = async () => {

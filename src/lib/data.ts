@@ -1,9 +1,10 @@
 
-import type { Resource, Booking, Notification } from './types';
+import type { Resource, Booking, Notification, User } from './types';
 import { addHours, set, subDays, formatDistanceToNow, parseISO } from 'date-fns';
 
 const RESOURCES_STORAGE_KEY = 'campus-flow-resources';
 const BOOKINGS_STORAGE_KEY = 'campus-flow-bookings';
+const USERS_STORAGE_KEY = 'campus-flow-users';
 
 // Helper to safely access localStorage
 const getFromStorage = <T>(key: string, defaultValue: T[]): T[] => {
@@ -248,4 +249,22 @@ export const addBooking = (booking: Omit<Booking, 'id'>) => {
   };
   bookings.push(newBooking);
   setInStorage(BOOKINGS_STORAGE_KEY, bookings);
+}
+
+
+// --- User Approval Functions ---
+
+export const getPendingUsers = (): User[] => {
+  const users = getFromStorage<User>(USERS_STORAGE_KEY, []);
+  return users.filter(user => user.status === 'pending');
+}
+
+export const updateUserStatus = (userId: string, status: 'approved' | 'rejected') => {
+  let users = getFromStorage<User>(USERS_STORAGE_KEY, []);
+  const userIndex = users.findIndex(user => user.id === userId);
+
+  if (userIndex !== -1) {
+    users[userIndex].status = status;
+    setInStorage(USERS_STORAGE_KEY, users);
+  }
 }

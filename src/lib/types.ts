@@ -32,6 +32,7 @@ export interface User {
   id: string;
   username: string;
   role: 'student' | 'faculty' | 'admin';
+  password?: string; // In a real app, this would be a hash
   fullName?: string;
   email?: string;
   dateJoined?: string;
@@ -39,4 +40,6 @@ export interface User {
   yearOfStudy?: string;
   studentId?: string;
   jobTitle?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  avatarUrl?: string;
 }
