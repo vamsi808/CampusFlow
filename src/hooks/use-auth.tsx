@@ -172,44 +172,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   
   const loginWithGoogle = async (): Promise<void> => {
-    if (!auth) throw new Error("Auth not initialized");
+    if (!auth) {
+        throw new Error("Auth not initialized");
+    }
     const provider = new GoogleAuthProvider();
     try {
         const result = await signInWithPopup(auth, provider);
         const firebaseUser = result.user;
 
         if (!firebaseUser.email || !firebaseUser.email.endsWith('@mlrit.ac.in')) {
-            await signOut(auth); // Sign out from firebase
-            setUser(null);
-            localStorage.removeItem(SESSION_STORAGE_KEY);
+            await signOut(auth);
             throw new Error("Only institutional accounts (@mlrit.ac.in) are allowed.");
         }
         
-        const users = getStoredUsers();
-        let appUser = users.find(u => u.id === firebaseUser.uid);
+        const allUsers = getStoredUsers();
+        let appUser = allUsers.find(u => u.id === firebaseUser.uid);
       
         if (!appUser) {
             // If user does not exist in our local storage, create them
             appUser = mapFirebaseUserToAppUser(firebaseUser);
-            users.push(appUser);
-            setStoredUsers(users);
+            allUsers.push(appUser);
+            setStoredUsers(allUsers);
         }
         
-        // Directly set the user state and session storage
         setUser(appUser);
         localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(appUser));
-        
-        // Navigate to home page
         router.push('/');
-
     } catch (error: any) {
-        // Ensure user is signed out on any error
+        // Sign out to prevent inconsistent states
         if (auth.currentUser) {
             await signOut(auth);
         }
         setUser(null);
         localStorage.removeItem(SESSION_STORAGE_KEY);
-        // Re-throw the error so the UI can catch it and display a toast.
+        // Re-throw the original error so the UI can display it
         throw error;
     }
   }
