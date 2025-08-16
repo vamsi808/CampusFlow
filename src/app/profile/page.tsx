@@ -157,6 +157,7 @@ export default function ProfilePage() {
   };
   
   const getRoleDescription = () => {
+    if (!user) return '';
     if (user.role === 'student' && user.yearOfStudy) {
         return `${user.yearOfStudy}`;
     }
