@@ -1,17 +1,57 @@
+
 import type { Resource, Booking, Notification } from './types';
-import { addHours, set, subDays, formatDistanceToNow } from 'date-fns';
+import { addHours, set, subDays, formatDistanceToNow, parseISO } from 'date-fns';
 
-const today = new Date();
+const RESOURCES_STORAGE_KEY = 'campus-flow-resources';
+const BOOKINGS_STORAGE_KEY = 'campus-flow-bookings';
 
-export let allBookings: Booking[] = [
+// Helper to safely access localStorage
+const getFromStorage = <T>(key: string, defaultValue: T[]): T[] => {
+  if (typeof window === 'undefined') {
+    return defaultValue;
+  }
+  try {
+    const item = window.localStorage.getItem(key);
+    if (!item) return defaultValue;
+    
+    const parsed = JSON.parse(item);
+
+    // Date objects are stored as strings, so we need to parse them back
+    if (key === BOOKINGS_STORAGE_KEY) {
+        return parsed.map((booking: any) => ({
+            ...booking,
+            startTime: parseISO(booking.startTime),
+            endTime: parseISO(booking.endTime)
+        }));
+    }
+    
+    return parsed;
+  } catch (error) {
+    console.error(`Error reading from localStorage key “${key}”:`, error);
+    return defaultValue;
+  }
+};
+
+const setInStorage = <T>(key: string, value: T[]) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error(`Error writing to localStorage key “${key}”:`, error);
+  }
+};
+
+const initialBookings: Booking[] = [
   {
     id: 'booking1',
     resourceId: 'lib-sr-1',
     userId: 'user1',
     userName: 'Alex Johnson',
     title: 'Group Study Session',
-    startTime: set(today, { hours: 10, minutes: 0, seconds: 0, milliseconds: 0 }),
-    endTime: set(today, { hours: 12, minutes: 0, seconds: 0, milliseconds: 0 }),
+    startTime: set(new Date(), { hours: 10, minutes: 0, seconds: 0, milliseconds: 0 }),
+    endTime: set(new Date(), { hours: 12, minutes: 0, seconds: 0, milliseconds: 0 }),
   },
   {
     id: 'booking2',
@@ -19,8 +59,8 @@ export let allBookings: Booking[] = [
     userId: 'user2',
     userName: 'Maria Garcia',
     title: 'Project Meeting',
-    startTime: set(today, { hours: 14, minutes: 0, seconds: 0, milliseconds: 0 }),
-    endTime: set(today, { hours: 15, minutes: 0, seconds: 0, milliseconds: 0 }),
+    startTime: set(new Date(), { hours: 14, minutes: 0, seconds: 0, milliseconds: 0 }),
+    endTime: set(new Date(), { hours: 15, minutes: 0, seconds: 0, milliseconds: 0 }),
   },
   {
     id: 'booking3',
@@ -28,10 +68,10 @@ export let allBookings: Booking[] = [
     userId: 'user3',
     userName: 'Sam Lee',
     title: 'Chemistry Experiment',
-    startTime: set(today, { hours: 9, minutes: 0, seconds: 0, milliseconds: 0 }),
-    endTime: set(today, { hours: 13, minutes: 0, seconds: 0, milliseconds: 0 }),
+    startTime: set(new Date(), { hours: 9, minutes: 0, seconds: 0, milliseconds: 0 }),
+    endTime: set(new Date(), { hours: 13, minutes: 0, seconds: 0, milliseconds: 0 }),
   },
-  {
+    {
     id: 'user-res-1',
     resourceId: 'lib-sr-2',
     userId: 'currentUser',
@@ -60,7 +100,7 @@ export let allBookings: Booking[] = [
   }
 ];
 
-export let allResources: Resource[] = [
+const initialResources: Resource[] = [
   {
     id: 'lib-sr-1',
     name: 'Quiet Study Room 101',
@@ -69,7 +109,6 @@ export let allResources: Resource[] = [
     capacity: 4,
     imageUrl: 'https://placehold.co/600x400.png',
     description: 'A quiet, enclosed space perfect for individual or small group study.',
-    schedule: allBookings.filter(b => b.resourceId === 'lib-sr-1'),
   },
   {
     id: 'lib-sr-2',
@@ -88,7 +127,6 @@ export let allResources: Resource[] = [
     capacity: 1,
     imageUrl: 'https://placehold.co/600x400.png',
     description: 'High-powered electron microscope for advanced biological research.',
-    schedule: allBookings.filter(b => b.resourceId === 'sci-lab-2'),
   },
   {
     id: 'mus-aud-1',
@@ -135,27 +173,47 @@ export let allResources: Resource[] = [
     imageUrl: 'https://placehold.co/600x400.png',
     description: 'Outdoor tennis court with high-quality surface.',
   }
-];
+].map(r => ({ ...r, schedule: [] }));
+
+
+// Initialize with default data if nothing is in localStorage
+if (typeof window !== 'undefined' && !localStorage.getItem(RESOURCES_STORAGE_KEY)) {
+  setInStorage(RESOURCES_STORAGE_KEY, initialResources);
+}
+if (typeof window !== 'undefined' && !localStorage.getItem(BOOKINGS_STORAGE_KEY)) {
+  setInStorage(BOOKINGS_STORAGE_KEY, initialBookings);
+}
+
+// Now, all functions will read from and write to localStorage via these getters
+export const allResources = ((): Resource[] => {
+    const resources = getFromStorage(RESOURCES_STORAGE_KEY, []);
+    const bookings = getFromStorage(BOOKINGS_STORAGE_KEY, []);
+    
+    // Attach schedules to resources
+    return resources.map(resource => ({
+        ...resource,
+        schedule: bookings.filter(b => b.resourceId === resource.id),
+    }));
+})();
+
+
+export const allBookings = getFromStorage(BOOKINGS_STORAGE_KEY, []);
 
 export const resourceTypes = [...new Set(allResources.map(r => r.type))];
 export const locations = [...new Set(allResources.map(r => r.location))];
 
-// This function now correctly filters bookings for a specific user
 export const userReservations = (userId: string): Booking[] => {
-  // In a real app, you'd fetch this from a database.
-  // For now, we filter the mock data. 'currentUser' is a placeholder for the logged-in user in the sample data.
-  // A real user ID will be passed in from the auth context.
-  return allBookings.filter(b => b.userId === userId);
+  const bookings = getFromStorage(BOOKINGS_STORAGE_KEY, []);
+  return bookings.filter(b => b.userId === userId);
 }
 
-
-// Dynamically generate notifications from user's upcoming reservations
 export const userNotifications = (userId: string): Notification[] => {
     const reservations = userReservations(userId);
+    const resources = getFromStorage(RESOURCES_STORAGE_KEY, []);
     return reservations
         .filter(res => res.startTime > new Date())
         .map((res, index) => {
-            const resource = allResources.find(r => r.id === res.resourceId);
+            const resource = resources.find(r => r.id === res.resourceId);
             return {
                 id: `notif-${res.id}`,
                 title: 'Upcoming Booking',
@@ -165,32 +223,29 @@ export const userNotifications = (userId: string): Notification[] => {
     });
 };
 
-
 export const deleteResource = (id: string) => {
-  allResources = allResources.filter(r => r.id !== id);
+  let resources = getFromStorage(RESOURCES_STORAGE_KEY, []);
+  resources = resources.filter(r => r.id !== id);
+  setInStorage(RESOURCES_STORAGE_KEY, resources);
 }
 
-export const addResource = (resource: Omit<Resource, 'schedule'>) => {
+export const addResource = (resource: Omit<Resource, 'schedule' | 'id'>) => {
+  let resources = getFromStorage(RESOURCES_STORAGE_KEY, []);
   const newResource: Resource = {
     ...resource,
     id: `new-${Math.random().toString(36).substr(2, 9)}`,
+    schedule: [],
   };
-  allResources.unshift(newResource);
+  resources.unshift(newResource);
+  setInStorage(RESOURCES_STORAGE_KEY, resources);
 }
 
 export const addBooking = (booking: Omit<Booking, 'id'>) => {
+  const bookings = getFromStorage(BOOKINGS_STORAGE_KEY, []);
   const newBooking: Booking = {
     ...booking,
     id: `booking-${Date.now()}`
   };
-  allBookings.push(newBooking);
-
-  // also update the resource's schedule
-  const resource = allResources.find(r => r.id === newBooking.resourceId);
-  if (resource) {
-    if (!resource.schedule) {
-      resource.schedule = [];
-    }
-    resource.schedule.push(newBooking);
-  }
+  bookings.push(newBooking);
+  setInStorage(BOOKINGS_STORAGE_KEY, bookings);
 }
