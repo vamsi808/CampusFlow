@@ -34,14 +34,24 @@ import { useToast } from "@/hooks/use-toast";
 import type { Resource } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Image from 'next/image';
 
+
+const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const resourceSchema = z.object({
     name: z.string().min(1, "Name is required"),
     type: z.string().min(1, "Type is required"),
     location: z.string().min(1, "Location is required"),
     capacity: z.coerce.number().min(1, "Capacity must be at least 1"),
-    imageUrl: z.string().url("Must be a valid URL"),
+    imageFile: z.any()
+        .refine((files) => files?.length == 1, "Image is required.")
+        .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 4MB.`)
+        .refine(
+            (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
+            ".jpg, .jpeg, .png and .webp files are accepted."
+        ),
     description: z.string().min(1, "Description is required"),
     resourceFor: z.enum(['student', 'faculty'], { required_error: 'Please select who this resource is for.' }),
 });
@@ -51,6 +61,7 @@ type ResourceFormValues = z.infer<typeof resourceSchema>;
 export default function AdminPage() {
     const [resources, setResources] = React.useState<Resource[]>(allResources);
     const [isDialogOpen, setDialogOpen] = React.useState(false);
+    const [imagePreview, setImagePreview] = React.useState<string | null>(null);
     const { toast } = useToast();
 
     const studentResources = resources.filter(r => r.resourceFor === 'student');
@@ -63,7 +74,6 @@ export default function AdminPage() {
             type: "",
             location: "",
             capacity: 1,
-            imageUrl: "https://placehold.co/600x400.png",
             description: "",
         },
     });
@@ -76,12 +86,37 @@ export default function AdminPage() {
     };
 
     const onSubmit = (data: ResourceFormValues) => {
-        addResource(data);
-        setResources([...allResources]);
-        toast({ title: "Resource Added", description: "The new resource is now available." });
-        setDialogOpen(false);
-        form.reset();
+        const file = data.imageFile[0];
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            const imageUrl = reader.result as string;
+            const { imageFile, ...resourceData } = data;
+            addResource({ ...resourceData, imageUrl });
+            setResources([...allResources]);
+            toast({ title: "Resource Added", description: "The new resource is now available." });
+            setDialogOpen(false);
+            form.reset();
+            setImagePreview(null);
+        };
+        reader.onerror = () => {
+            toast({ variant: 'destructive', title: "File Read Error", description: "Could not read the selected file." });
+        }
     };
+    
+    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            setImagePreview(null);
+        }
+    };
+
 
     const ResourceTable = ({ resources }: { resources: Resource[] }) => (
         <div className="border rounded-md">
@@ -124,14 +159,20 @@ export default function AdminPage() {
             <CardTitle>Resource Management</CardTitle>
             <CardDescription>Add, edit, or delete campus resources for students and faculty.</CardDescription>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) {
+                form.reset();
+                setImagePreview(null);
+            }
+        }}>
             <DialogTrigger asChild>
                 <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Resource
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[480px]">
                 <DialogHeader>
                     <DialogTitle>Add New Resource</DialogTitle>
                     <DialogDescription>Fill in the details for the new resource.</DialogDescription>
@@ -150,9 +191,23 @@ export default function AdminPage() {
                         <FormField control={form.control} name="capacity" render={({ field }) => (
                             <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
-                         <FormField control={form.control} name="imageUrl" render={({ field }) => (
-                            <FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                         <FormField control={form.control} name="imageFile" render={({ field }) => (
+                            <FormItem><FormLabel>Image</FormLabel>
+                            <FormControl>
+                                <Input type="file" accept="image/png, image/jpeg, image/webp"
+                                    onChange={(e) => {
+                                        field.onChange(e.target.files);
+                                        handleImageChange(e);
+                                    }}
+                                />
+                            </FormControl>
+                            <FormMessage /></FormItem>
                         )} />
+                        {imagePreview && (
+                            <div className="relative w-full h-48 rounded-md overflow-hidden">
+                                <Image src={imagePreview} alt="Image preview" fill className="object-cover" />
+                            </div>
+                        )}
                         <FormField control={form.control} name="description" render={({ field }) => (
                             <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
