@@ -106,31 +106,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState<Auth | null>(null);
 
   useEffect(() => {
-    // This ensures getAuth is only called on the client side
     const authInstance = getAuth(app);
     setAuth(authInstance);
 
     const unsubscribe = onAuthStateChanged(authInstance, (firebaseUser) => {
         if (firebaseUser) {
             const users = getStoredUsers();
-            let appUser = users.find(u => u.id === firebaseUser.uid);
-            if (!appUser) {
-                // This case handles users who signed up with Google but aren't in our local storage yet.
-                // We create a temporary user object, but the definitive one will be created/updated on successful sign-in logic.
-                appUser = mapFirebaseUserToAppUser(firebaseUser);
-                users.push(appUser);
-                setStoredUsers(users);
+            const appUser = users.find(u => u.id === firebaseUser.uid);
+            if (appUser) {
+                setUser(appUser);
+                localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(appUser));
             }
-            setUser(appUser);
-            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(appUser));
         } else {
-            // Also check for local admin session
             const sessionJson = localStorage.getItem(SESSION_STORAGE_KEY);
             if (sessionJson) {
                 try {
                     const sessionUser = JSON.parse(sessionJson);
-                    // Clear non-Firebase sessions on auth state change to avoid conflicts
-                    if (sessionUser.username !== 'admin') {
+                     if (sessionUser.username !== 'admin') {
                        localStorage.removeItem(SESSION_STORAGE_KEY);
                        setUser(null);
                     } else {
@@ -148,11 +140,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   const login = async (email: string, password: string): Promise<void> => {
     if (!auth) throw new Error("Auth not initialized");
-    // Check for local admin user first
     if ((email === 'admin' || email === 'admin@campusflow.app') && password === 'admin@123') {
         const users = getStoredUsers();
         const adminUser = users.find(u => u.username === 'admin');
@@ -169,35 +160,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!auth) throw new Error("Auth not initialized");
     const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
-      const firebaseUser = result.user;
+        const result = await signInWithPopup(auth, provider);
+        const firebaseUser = result.user;
 
-      if (!firebaseUser.email || !firebaseUser.email.endsWith('@mlrit.ac.in')) {
-        await signOut(auth); // Immediately sign out the user from Firebase
-        throw new Error("Only institutional accounts (@mlrit.ac.in) are allowed.");
-      }
+        if (!firebaseUser.email || !firebaseUser.email.endsWith('@mlrit.ac.in')) {
+            await signOut(auth);
+            throw new Error("Only institutional accounts (@mlrit.ac.in) are allowed.");
+        }
+        
+        const users = getStoredUsers();
+        let appUser = users.find(u => u.id === firebaseUser.uid);
       
-      const users = getStoredUsers();
-      let appUser = users.find(u => u.id === firebaseUser.uid);
-      
-      if (!appUser) {
-        // If user doesn't exist, create them.
-        appUser = mapFirebaseUserToAppUser(firebaseUser, 'student'); // Default role 'student'
-        users.push(appUser);
-        setStoredUsers(users);
-      }
-      
-      // onAuthStateChanged will handle setting the user and session
-      router.push('/');
+        if (!appUser) {
+            appUser = mapFirebaseUserToAppUser(firebaseUser, 'student');
+            users.push(appUser);
+            setStoredUsers(users);
+        }
+        
+        setUser(appUser);
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(appUser));
+        router.push('/');
 
     } catch (error: any) {
-        console.error("Google Sign-In Error:", error);
         if (auth.currentUser) {
             await signOut(auth);
         }
         setUser(null);
         localStorage.removeItem(SESSION_STORAGE_KEY);
-        // Rethrow the error to be caught by the UI
         throw error;
     }
   }
@@ -225,22 +214,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const users = getStoredUsers();
       const updatedUsers = [...users, newUser];
       setStoredUsers(updatedUsers);
-      // Let onAuthStateChanged handle setting the user after redirecting to login
   };
 
   const logout = async () => {
-    if (!auth) {
-        // Handle non-firebase logout (e.g., admin)
-        setUser(null);
-        localStorage.removeItem(SESSION_STORAGE_KEY);
-        router.push('/login');
-        return;
-    };
-
-    if (auth.currentUser) {
-        await signOut(auth);
+    const currentAuth = getAuth(app);
+    if (currentAuth.currentUser) {
+        await signOut(currentAuth);
     }
-    
     setUser(null);
     localStorage.removeItem(SESSION_STORAGE_KEY);
     router.push('/login');
@@ -251,18 +231,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!user) {
             return reject(new Error("No user is logged in to update."));
         }
-        // Use a timeout to simulate an async operation
         setTimeout(() => {
             const users = getStoredUsers();
             const userIndex = users.findIndex(u => u.id === user.id);
 
             if (userIndex > -1) {
-                // Update the user in the full list
                 const updatedUser = { ...users[userIndex], ...data };
                 users[userIndex] = updatedUser;
                 setStoredUsers(users);
 
-                // Update the active user session state
                 setUser(updatedUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedUser));
                 resolve();
@@ -287,3 +264,5 @@ export function useAuth() {
   }
   return context;
 }
+
+    
