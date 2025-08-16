@@ -38,8 +38,13 @@ const getStoredUsers = (): User[] => {
     if (usersJson) {
         try {
             const parsed = JSON.parse(usersJson);
-            // Default admin user might not have a proper ID, so ensure it does
-            return parsed.map((u: User) => u.username === 'admin' && !u.id ? {...u, id: 'admin-user', status: 'approved'} : u);
+            // Ensure default admin user always has correct status
+             return parsed.map((u: User) => {
+                if (u.username === 'admin') {
+                    return { ...u, id: 'admin-user', status: 'approved', role: 'admin' };
+                }
+                return u;
+            });
         } catch (e) {
             console.error("Failed to parse users from localStorage", e);
             return [];
@@ -109,25 +114,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(message);
     }
     
-    // For regular users, we now need to use email/password auth
-    if (potentialUser.role !== 'admin') {
-        // Since we don't have a real backend, we'll simulate password check
-        if (potentialUser.password !== password) {
-            throw new Error("Invalid password.");
-        }
-        // If password matches, we set the session
-        setUser(potentialUser);
-        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(potentialUser));
-        router.push('/');
-    } else { // Admin login
-        if (password === 'admin@123') {
-            setUser(potentialUser);
-            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(potentialUser));
-            router.push('/');
-        } else {
-            throw new Error("Invalid admin password.");
-        }
+    // Since we don't have a real backend, we'll simulate password check
+    if (potentialUser.password !== password) {
+        throw new Error("Invalid password.");
     }
+    // If password matches, we set the session
+    setUser(potentialUser);
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(potentialUser));
+    router.push('/');
   };
 
   const signup = async (data: SignupData): Promise<void> => {
