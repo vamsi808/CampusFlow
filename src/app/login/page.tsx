@@ -24,7 +24,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -36,6 +36,13 @@ export default function LoginPage() {
     },
   });
 
+  React.useEffect(() => {
+    if (user) {
+      router.replace('/');
+    }
+  }, [user, router]);
+
+
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
@@ -44,7 +51,7 @@ export default function LoginPage() {
         title: 'Login Successful',
         description: 'Welcome back!',
       });
-      router.push('/');
+      // The push will be handled by the hook's effect after user state changes
     } catch (error) {
       toast({
         variant: 'destructive',

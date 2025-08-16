@@ -10,7 +10,6 @@ import {
   signOut,
   User as FirebaseUser,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   Auth
 } from "firebase/auth";
 import type { User } from '@/lib/types';
@@ -79,85 +78,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-        if (firebaseUser) {
-            const users = getStoredUsers();
-            const appUser = users.find(u => u.id === firebaseUser.uid);
-            if (appUser && appUser.status === 'approved') {
-                setUser(appUser);
-                localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(appUser));
-            } else {
-                 if (appUser && appUser.status !== 'approved') {
-                     toast({ variant: 'destructive', title: 'Login Failed', description: 'Your account is not approved yet.' });
-                 }
-                signOut(auth); // Sign out if not approved
-                setUser(null);
-                localStorage.removeItem(SESSION_STORAGE_KEY);
-            }
-        } else {
-            const sessionJson = localStorage.getItem(SESSION_STORAGE_KEY);
-            if (sessionJson) {
-                try {
-                    const sessionUser = JSON.parse(sessionJson);
-                     if (sessionUser.username === 'admin') {
-                       setUser(sessionUser)
-                    } else {
-                       localStorage.removeItem(SESSION_STORAGE_KEY);
-                       setUser(null);
-                    }
-                } catch (error) {
-                    setUser(null);
-                    localStorage.removeItem(SESSION_STORAGE_KEY);
-                }
-            } else {
-                setUser(null);
-            }
+    // This effect now only handles session restoration and admin login
+    const sessionJson = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (sessionJson) {
+        try {
+            const sessionUser = JSON.parse(sessionJson);
+            setUser(sessionUser);
+        } catch (error) {
+            setUser(null);
+            localStorage.removeItem(SESSION_STORAGE_KEY);
         }
-        setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [auth, toast]);
+    }
+    setIsLoading(false);
+  }, []);
 
   const login = async (email: string, password: string): Promise<void> => {
     if (!auth) throw new Error("Auth not initialized");
     
     const users = getStoredUsers();
+    const potentialUser = users.find(u => u.email === email || u.username === email);
 
-    if ((email === 'admin' || email === 'admin@campusflow.app') && password === 'admin@123') {
-        const adminUser = users.find(u => u.username === 'admin');
-        if (adminUser) {
-            setUser(adminUser);
-            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(adminUser));
-            router.push('/');
-            return;
-        }
+    if (!potentialUser) {
+        throw new Error("User not found. Please check your credentials or sign up.");
     }
-    
-    // Find user by email to check status before attempting Firebase login
-    const potentialUser = users.find(u => u.email === email);
-    if (potentialUser && potentialUser.status !== 'approved') {
+
+    if (potentialUser.status !== 'approved') {
         const message = potentialUser.status === 'pending'
             ? 'Your account is pending approval.'
             : 'Your account has been rejected.';
         throw new Error(message);
     }
     
-    if (!potentialUser && email !== 'admin@campusflow.app') {
-      throw new Error("User not found. Please sign up first.");
+    // For regular users, we now need to use email/password auth
+    if (potentialUser.role !== 'admin') {
+        // Since we don't have a real backend, we'll simulate password check
+        if (potentialUser.password !== password) {
+            throw new Error("Invalid password.");
+        }
+        // If password matches, we set the session
+        setUser(potentialUser);
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(potentialUser));
+        router.push('/');
+    } else { // Admin login
+        if (password === 'admin@123') {
+            setUser(potentialUser);
+            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(potentialUser));
+            router.push('/');
+        } else {
+            throw new Error("Invalid admin password.");
+        }
     }
-
-    await signInWithEmailAndPassword(auth, email, password);
-    router.push('/');
   };
 
   const signup = async (data: SignupData): Promise<void> => {
-    if (!auth) throw new Error("Auth not initialized");
-  
-    const { email, password, username } = data;
-    if (!email || !password) {
-      throw new Error("Email and password are required for signup.");
-    }
+    const { email, username } = data;
   
     const users = getStoredUsers();
     if (users.some(u => u.email === email)) {
@@ -167,35 +141,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("This username is already taken. Please choose another one.");
     }
   
-    // Create user in Firebase Auth
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const firebaseUser = userCredential.user;
-  
-    // Create the user profile for local storage
-    // We don't store the password here
-    const { password: _password, ...restData } = data;
+    // Create the user profile for local storage with a pending status
     const newUser: User = {
-      ...restData,
-      id: firebaseUser.uid,
-      username,
-      email: firebaseUser.email || '',
+      ...data,
+      id: `user-${Date.now()}-${Math.random()}`, // Create a unique ID
       dateJoined: new Date().toISOString(),
       status: 'pending',
     };
     
     const updatedUsers = [...users, newUser];
     setStoredUsers(updatedUsers);
-  
-    // We should immediately sign the user out after registration as they need approval
-    await signOut(auth);
   };
   
   const logout = async () => {
-    if (auth && auth.currentUser) {
-        await signOut(auth);
-    }
     setUser(null);
     localStorage.removeItem(SESSION_STORAGE_KEY);
+    // No need to call signOut(auth) if not using firebase session persistence for all users
     router.push('/login');
   };
   
