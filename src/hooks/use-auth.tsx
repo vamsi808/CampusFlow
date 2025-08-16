@@ -193,6 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     const auth = getAuth(app);
     await signOut(auth);
+    setUser(null);
     router.push('/login');
   };
   
