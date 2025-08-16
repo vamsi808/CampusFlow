@@ -3,8 +3,9 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase';
+import { app } from '@/lib/firebase'; // Import the initialized app
 import { 
+  getAuth, // Import getAuth
   onAuthStateChanged, 
   GoogleAuthProvider, 
   signInWithPopup, 
@@ -16,6 +17,8 @@ import {
 
 const USERS_STORAGE_KEY = 'campus-flow-users';
 const SESSION_STORAGE_KEY = 'campus-flow-session';
+
+const auth = getAuth(app); // Get the auth instance from the app
 
 interface User {
   id: string;
@@ -151,6 +154,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Since we sign out on failed domain check, we don't need complex catch logic.
         // Let the UI component handle displaying the error.
         console.error("Google Sign-In Error:", error);
+        if (auth.currentUser) {
+            await signOut(auth);
+        }
         throw error;
     }
   }
