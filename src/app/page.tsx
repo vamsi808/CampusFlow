@@ -4,11 +4,11 @@
 import * as React from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { allResources, resourceTypes, locations } from '@/lib/data';
-import type { Resource } from '@/lib/types';
+import { allResources } from '@/lib/data';
 import { ResourceCard } from '@/components/resource-card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
+import { Building, Filter, Search } from 'lucide-react';
 
 export default function ResourceBrowserPage() {
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -24,10 +24,8 @@ export default function ResourceBrowserPage() {
 
   const availableResources = React.useMemo(() => {
     if (!user) {
-      // Show all student resources for logged-out users
       return allResources.filter(resource => resource.resourceFor === 'student');
     }
-    // Filter based on user role
     return allResources.filter(resource => resource.resourceFor === user.role);
   }, [user]);
 
@@ -46,21 +44,24 @@ export default function ResourceBrowserPage() {
 
   return (
     <div className="space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Find Your Space</h1>
-        <p className="mt-4 text-lg text-muted-foreground">Browse and book campus resources with ease.</p>
+      <div className="text-center p-8 bg-card border rounded-lg shadow-sm">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl bg-gradient-to-r from-primary to-purple-500 text-transparent bg-clip-text">Find Your Perfect Space</h1>
+        <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">Browse, discover, and book campus resources with ease. Your ideal study spot, lab, or practice room is just a few clicks away.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 p-6 bg-card rounded-lg shadow-sm border">
-        <Input
-          placeholder="Search by name..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="lg:col-span-2"
-        />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 p-4 bg-card rounded-lg shadow-sm border">
+        <div className="relative lg:col-span-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Search by resource name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+        </div>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger>
-            <SelectValue placeholder="Filter by type" />
+            <div className="flex items-center gap-2"><Filter className="h-4 w-4" /> <SelectValue placeholder="Filter by type" /></div>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
@@ -71,7 +72,7 @@ export default function ResourceBrowserPage() {
         </Select>
         <Select value={locationFilter} onValueChange={setLocationFilter}>
           <SelectTrigger>
-            <SelectValue placeholder="Filter by location" />
+            <div className="flex items-center gap-2"><Building className="h-4 w-4" /> <SelectValue placeholder="Filter by location" /></div>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Locations</SelectItem>
@@ -82,23 +83,23 @@ export default function ResourceBrowserPage() {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {isClient && (
-            <AnimatePresence>
-              {filteredResources.map((resource, i) => (
-                <motion.div
-                  key={resource.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.2, delay: i * 0.05 }}
-                >
-                  <ResourceCard resource={resource} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-        )}
-      </div>
+      <AnimatePresence>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {isClient && filteredResources.map((resource, i) => (
+            <motion.div
+              key={resource.id}
+              layout
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.3, delay: i * 0.05 }}
+            >
+              <ResourceCard resource={resource} />
+            </motion.div>
+          ))}
+        </div>
+      </AnimatePresence>
+
       {isClient && filteredResources.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           <p className="text-lg font-medium">No resources found</p>

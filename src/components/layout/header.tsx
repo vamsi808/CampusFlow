@@ -65,7 +65,7 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center px-4 sm:px-6 lg:px-8">
         <div className="flex items-center">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg">
@@ -95,28 +95,35 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-4">
+        <div className="ml-auto flex items-center gap-2">
           {user ? (
             <>
             <Popover>
                 <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative" disabled={notifications.length === 0}>
+                <Button variant="ghost" size="icon" className="relative">
                     <Bell className="h-5 w-5" />
                     {notifications.length > 0 &&
-                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                        <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-3 w-3 bg-primary/90"></span>
                         </span>
                     }
+                     <span className="sr-only">Notifications</span>
                 </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80">
                 <div className="grid gap-4">
                     <div className="space-y-2">
                     <h4 className="font-medium leading-none">Notifications</h4>
-                    <p className="text-sm text-muted-foreground">
-                        You have {notifications.length} new messages.
-                    </p>
+                     {notifications.length > 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                            You have {notifications.length} new messages.
+                        </p>
+                    ) : (
+                         <p className="text-sm text-muted-foreground">
+                            You have no new notifications.
+                        </p>
+                    )}
                     </div>
                     <div className="grid gap-2">
                     {notifications.map((notification) => (
@@ -141,10 +148,10 @@ export function Header() {
 
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9 border-2 border-primary/50">
                     <AvatarImage src={user.avatarUrl} alt="User avatar" />
-                    <AvatarFallback>{getInitials(user.fullName || user.username)}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/20">{getInitials(user.fullName || user.username)}</AvatarFallback>
                     </Avatar>
                 </Button>
                 </DropdownMenuTrigger>
@@ -164,7 +171,7 @@ export function Header() {
                             <span>Profile</span>
                         </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem disabled>
                         <Settings className="mr-2 h-4 w-4" />
                         <span>Settings</span>
                     </DropdownMenuItem>
@@ -252,7 +259,3 @@ export function Header() {
     </header>
   );
 }
-
-    
-
-    
