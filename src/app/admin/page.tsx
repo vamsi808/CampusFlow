@@ -35,6 +35,7 @@ import type { Resource } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
@@ -177,58 +178,62 @@ export default function AdminPage() {
                     <DialogTitle>Add New Resource</DialogTitle>
                     <DialogDescription>Fill in the details for the new resource.</DialogDescription>
                 </DialogHeader>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField control={form.control} name="name" render={({ field }) => (
-                            <FormItem><FormLabel>Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="type" render={({ field }) => (
-                            <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} placeholder="e.g. Study Room, Court" /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="location" render={({ field }) => (
-                            <FormItem><FormLabel>Location</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="capacity" render={({ field }) => (
-                            <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                         <FormField control={form.control} name="imageFile" render={({ field }) => (
-                            <FormItem><FormLabel>Image</FormLabel>
-                            <FormControl>
-                                <Input type="file" accept="image/png, image/jpeg, image/webp"
-                                    onChange={(e) => {
-                                        field.onChange(e.target.files);
-                                        handleImageChange(e);
-                                    }}
-                                />
-                            </FormControl>
-                            <FormMessage /></FormItem>
-                        )} />
-                        {imagePreview && (
-                            <div className="relative w-full h-48 rounded-md overflow-hidden">
-                                <Image src={imagePreview} alt="Image preview" fill className="object-cover" />
-                            </div>
-                        )}
-                        <FormField control={form.control} name="description" render={({ field }) => (
-                            <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="resourceFor" render={({ field }) => (
-                             <FormItem><FormLabel>Resource For</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="Select who can book this resource" /></SelectTrigger></FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="student">Student</SelectItem>
-                                        <SelectItem value="faculty">Faculty</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            <FormMessage /></FormItem>
-                        )} />
+                <ScrollArea className="max-h-[70vh] -mx-6">
+                    <div className="px-6">
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                <FormField control={form.control} name="name" render={({ field }) => (
+                                    <FormItem><FormLabel>Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                )} />
+                                <FormField control={form.control} name="type" render={({ field }) => (
+                                    <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} placeholder="e.g. Study Room, Court" /></FormControl><FormMessage /></FormItem>
+                                )} />
+                                <FormField control={form.control} name="location" render={({ field }) => (
+                                    <FormItem><FormLabel>Location</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                )} />
+                                <FormField control={form.control} name="capacity" render={({ field }) => (
+                                    <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                                )} />
+                                <FormField control={form.control} name="imageFile" render={({ field }) => (
+                                    <FormItem><FormLabel>Image</FormLabel>
+                                    <FormControl>
+                                        <Input type="file" accept="image/png, image/jpeg, image/webp"
+                                            onChange={(e) => {
+                                                field.onChange(e.target.files);
+                                                handleImageChange(e);
+                                            }}
+                                        />
+                                    </FormControl>
+                                    <FormMessage /></FormItem>
+                                )} />
+                                {imagePreview && (
+                                    <div className="relative w-full h-48 rounded-md overflow-hidden">
+                                        <Image src={imagePreview} alt="Image preview" fill className="object-cover" />
+                                    </div>
+                                )}
+                                <FormField control={form.control} name="description" render={({ field }) => (
+                                    <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+                                )} />
+                                <FormField control={form.control} name="resourceFor" render={({ field }) => (
+                                    <FormItem><FormLabel>Resource For</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select who can book this resource" /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="student">Student</SelectItem>
+                                                <SelectItem value="faculty">Faculty</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    <FormMessage /></FormItem>
+                                )} />
 
-                        <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-                            <Button type="submit">Save Resource</Button>
-                        </DialogFooter>
-                    </form>
-                </Form>
+                                <DialogFooter>
+                                    <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+                                    <Button type="submit">Save Resource</Button>
+                                </DialogFooter>
+                            </form>
+                        </Form>
+                    </div>
+                </ScrollArea>
             </DialogContent>
         </Dialog>
       </CardHeader>
