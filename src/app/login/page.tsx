@@ -52,7 +52,7 @@ export default function LoginPage() {
         title: 'Login Successful',
         description: 'Welcome back!',
       });
-      // The push will be handled by the hook's effect after user state changes
+      router.push('/');
     } catch (error) {
       toast({
         variant: 'destructive',
