@@ -44,4 +44,25 @@ export interface User {
   status: 'pending' | 'approved' | 'rejected';
   avatarUrl?: string;
   section?: string;
+  sectionId?: string;
+  officeHours?: string;
+}
+
+export interface TimetableEntry {
+    id: string;
+    subjectName: string;
+    facultyId: string;
+    roomId: string;
+    sectionId: string;
+    startTime: Date;
+    endTime: Date;
+    status: 'upcoming' | 'ongoing' | 'completed' | 'canceled';
+    teachingMode?: 'in-person' | 'hybrid' | 'virtual';
+}
+
+export interface Section {
+    id: string;
+    name: string; // e.g., "IT-B"
+    department: string;
+    year: string;
 }

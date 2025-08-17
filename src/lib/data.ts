@@ -1,10 +1,13 @@
 
-import type { Resource, Booking, Notification, User } from './types';
-import { addHours, set, subDays, formatDistanceToNow, parseISO } from 'date-fns';
+import type { Resource, Booking, Notification, User, Section, TimetableEntry } from './types';
+import { addHours, set, subDays, formatDistanceToNow, parseISO, startOfToday, addMinutes, startOfWeek, addDays, setHours, setMinutes } from 'date-fns';
 
 const RESOURCES_STORAGE_KEY = 'campus-flow-resources';
 const BOOKINGS_STORAGE_KEY = 'campus-flow-bookings';
 const USERS_STORAGE_KEY = 'campus-flow-users';
+const SECTIONS_STORAGE_KEY = 'campus-flow-sections';
+const TIMETABLE_STORAGE_KEY = 'campus-flow-timetable';
+
 
 // Helper to safely access localStorage
 const getFromStorage = <T>(key: string, defaultValue: T[]): T[] => {
@@ -18,11 +21,11 @@ const getFromStorage = <T>(key: string, defaultValue: T[]): T[] => {
     const parsed = JSON.parse(item);
 
     // Date objects are stored as strings, so we need to parse them back
-    if (key === BOOKINGS_STORAGE_KEY) {
-        return parsed.map((booking: any) => ({
-            ...booking,
-            startTime: parseISO(booking.startTime),
-            endTime: parseISO(booking.endTime)
+    if (key === BOOKINGS_STORAGE_KEY || key === TIMETABLE_STORAGE_KEY) {
+        return parsed.map((entry: any) => ({
+            ...entry,
+            startTime: parseISO(entry.startTime),
+            endTime: parseISO(entry.endTime)
         }));
     }
     
@@ -181,8 +184,85 @@ const initialResources: Resource[] = [
     imageUrl: 'https://placehold.co/600x400.png',
     description: 'Outdoor tennis court with high-quality surface.',
     resourceFor: 'student',
-  }
+  },
+  {
+    id: 'room-cb-301',
+    name: 'Classroom CB-301',
+    type: 'Classroom',
+    location: 'Core Building, Floor 3',
+    capacity: 60,
+    imageUrl: 'https://placehold.co/600x400.png',
+    description: 'Standard classroom with projector and whiteboard.',
+    resourceFor: 'student',
+  },
+   {
+    id: 'room-cb-302',
+    name: 'Classroom CB-302',
+    type: 'Classroom',
+    location: 'Core Building, Floor 3',
+    capacity: 60,
+    imageUrl: 'https://placehold.co/600x400.png',
+    description: 'Standard classroom with projector and whiteboard.',
+    resourceFor: 'student',
+  },
+   {
+    id: 'lab-it-505',
+    name: 'Data Science Lab IT-505',
+    type: 'Lab',
+    location: 'IT Block, Floor 5',
+    capacity: 40,
+    imageUrl: 'https://placehold.co/600x400.png',
+    description: 'Computer lab with high-end systems for data science.',
+    resourceFor: 'student',
+  },
 ].map(r => ({ ...r, schedule: [] }));
+
+const initialSections: Section[] = [
+    { id: 'sec-it-b-2', name: 'IT-B', department: 'Information Technology', year: '2' },
+];
+
+const generateWeeklyTimetable = (sectionId: string, weekStart: Date): TimetableEntry[] => {
+    const timetable: TimetableEntry[] = [];
+    const subjects = [
+        { name: 'Data Structures', facultyId: 'faculty-ds', roomId: 'room-cb-301', duration: 50 },
+        { name: 'Operating Systems', facultyId: 'faculty-os', roomId: 'room-cb-302', duration: 50 },
+        { name: 'Web Technologies', facultyId: 'faculty-web', roomId: 'lab-it-505', duration: 100 },
+        { name: 'Database Management', facultyId: 'faculty-db', roomId: 'room-cb-301', duration: 50 },
+        { name: 'Computer Networks', facultyId: 'faculty-cn', roomId: 'room-cb-302', duration: 50 },
+    ];
+
+    const schedule = {
+        1: [{ time: '09:00', subject: 0 }, { time: '10:00', subject: 1 }, { time: '11:00', subject: 2 }], // Monday
+        2: [{ time: '09:00', subject: 3 }, { time: '10:00', subject: 4 }, { time: '13:00', subject: 0 }], // Tuesday
+        3: [{ time: '10:00', subject: 1 }, { time: '11:00', subject: 2 }, { time: '14:00', subject: 3 }], // Wednesday
+        4: [{ time: '09:00', subject: 4 }, { time: '11:00', subject: 0 }, { time: '13:00', subject: 1 }], // Thursday
+        5: [{ time: '10:00', subject: 2 }, { time: '11:00', subject: 3 }, { time: '14:00', subject: 4 }], // Friday
+    };
+
+    Object.entries(schedule).forEach(([day, classes]) => {
+        const currentDay = addDays(weekStart, parseInt(day) - 1);
+        classes.forEach(c => {
+            const subject = subjects[c.subject];
+            const [hour, minute] = c.time.split(':');
+            const startTime = setMinutes(setHours(currentDay, parseInt(hour)), parseInt(minute));
+            const endTime = addMinutes(startTime, subject.duration);
+            timetable.push({
+                id: `tt-${sectionId}-${day}-${c.time}`,
+                subjectName: subject.name,
+                facultyId: subject.facultyId,
+                roomId: subject.roomId,
+                sectionId: sectionId,
+                startTime: startTime,
+                endTime: endTime,
+                status: 'upcoming',
+            });
+        });
+    });
+
+    return timetable;
+}
+
+const initialTimetable = generateWeeklyTimetable('sec-it-b-2', startOfWeek(new Date(), { weekStartsOn: 1 }));
 
 
 // Initialize with default data if nothing is in localStorage
@@ -192,6 +272,13 @@ if (typeof window !== 'undefined' && !localStorage.getItem(RESOURCES_STORAGE_KEY
 if (typeof window !== 'undefined' && !localStorage.getItem(BOOKINGS_STORAGE_KEY)) {
   setInStorage(BOOKINGS_STORAGE_KEY, initialBookings);
 }
+if (typeof window !== 'undefined' && !localStorage.getItem(SECTIONS_STORAGE_KEY)) {
+  setInStorage(SECTIONS_STORAGE_KEY, initialSections);
+}
+if (typeof window !== 'undefined' && !localStorage.getItem(TIMETABLE_STORAGE_KEY)) {
+  setInStorage(TIMETABLE_STORAGE_KEY, initialTimetable);
+}
+
 
 // Now, all functions will read from and write to localStorage via these getters
 export const allResources = ((): Resource[] => {
@@ -207,6 +294,9 @@ export const allResources = ((): Resource[] => {
 
 
 export const allBookings = getFromStorage(BOOKINGS_STORAGE_KEY, []);
+export const allSections = getFromStorage(SECTIONS_STORAGE_KEY, []);
+export const allTimetableEntries = getFromStorage(TIMETABLE_STORAGE_KEY, []);
+
 
 export const resourceTypes = [...new Set(allResources.map(r => r.type))];
 export const locations = [...new Set(allResources.map(r => r.location))];
@@ -215,6 +305,14 @@ export const userReservations = (userId: string): Booking[] => {
   const bookings = getFromStorage(BOOKINGS_STORAGE_KEY, []);
   return bookings.filter(b => b.userId === userId);
 }
+
+export const getSectionTimetable = (sectionId: string): TimetableEntry[] => {
+    const timetable = getFromStorage(TIMETABLE_STORAGE_KEY, []);
+    return timetable.filter(entry => entry.sectionId === sectionId);
+}
+
+export const allUsers = getFromStorage(USERS_STORAGE_KEY, []);
+
 
 export const userNotifications = (userId: string): Notification[] => {
     const reservations = userReservations(userId);

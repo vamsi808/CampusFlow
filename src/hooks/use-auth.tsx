@@ -43,6 +43,9 @@ const getStoredUsers = (): User[] => {
                 if (u.username === 'admin') {
                     return { ...u, id: 'admin-user', status: 'approved', role: 'admin' };
                 }
+                if (u.username === 'student') {
+                    return { ...u, id: 'student-user', status: 'approved', role: 'student', sectionId: 'sec-it-b-2' };
+                }
                 return u;
             });
         } catch (e) {
@@ -50,23 +53,102 @@ const getStoredUsers = (): User[] => {
             return [];
         }
     }
-    // Add default admin user if no users exist
-    const adminUser: User = { 
-        id: 'admin-user', 
-        username: 'admin', 
-        role: 'admin', 
-        password: 'admin@123', 
-        fullName: 'Admin User', 
-        email: 'admin@campusflow.app', 
-        dateJoined: new Date().toISOString(), 
-        avatarUrl: undefined,
-        jobTitle: 'System Administrator',
-        studentId: '001',
-        status: 'approved',
-    };
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify([adminUser]));
-    return [adminUser];
+    // Add default users if no users exist
+    const defaultUsers: User[] = [
+        { 
+            id: 'admin-user', 
+            username: 'admin', 
+            role: 'admin', 
+            password: 'admin@123', 
+            fullName: 'Admin User', 
+            email: 'admin@campusflow.app', 
+            dateJoined: new Date().toISOString(), 
+            avatarUrl: 'https://i.pravatar.cc/150?u=admin',
+            jobTitle: 'System Administrator',
+            studentId: '001',
+            status: 'approved',
+        },
+        { 
+            id: 'student-user', 
+            username: 'student', 
+            role: 'student', 
+            password: 'student@123', 
+            fullName: 'Jane Doe', 
+            email: 'jane.doe@campusflow.app', 
+            dateJoined: new Date().toISOString(), 
+            avatarUrl: 'https://i.pravatar.cc/150?u=student',
+            department: 'Information Technology',
+            yearOfStudy: '2',
+            section: 'B',
+            sectionId: 'sec-it-b-2',
+            studentId: 'S2022001',
+            status: 'approved',
+        },
+        {
+            id: 'faculty-ds',
+            username: 'prof.ds',
+            role: 'faculty',
+            password: 'password',
+            fullName: 'Dr. Evelyn Reed',
+            email: 'e.reed@campusflow.app',
+            jobTitle: 'Professor',
+            department: 'Computer Science',
+            avatarUrl: 'https://i.pravatar.cc/150?u=faculty-ds',
+            status: 'approved',
+        },
+        {
+            id: 'faculty-os',
+            username: 'prof.os',
+            role: 'faculty',
+            password: 'password',
+            fullName: 'Dr. Samuel Chen',
+            email: 's.chen@campusflow.app',
+            jobTitle: 'Associate Professor',
+            department: 'Computer Science',
+            avatarUrl: 'https://i.pravatar.cc/150?u=faculty-os',
+            status: 'approved',
+        },
+        {
+            id: 'faculty-web',
+            username: 'prof.web',
+            role: 'faculty',
+            password: 'password',
+            fullName: 'Dr. Aisha Khan',
+            email: 'a.khan@campusflow.app',
+            jobTitle: 'Assistant Professor',
+            department: 'Information Technology',
+            avatarUrl: 'https://i.pravatar.cc/150?u=faculty-web',
+            status: 'approved',
+        },
+         {
+            id: 'faculty-db',
+            username: 'prof.db',
+            role: 'faculty',
+            password: 'password',
+            fullName: 'Dr. Ben Carter',
+            email: 'b.carter@campusflow.app',
+            jobTitle: 'Professor',
+            department: 'Information Technology',
+            avatarUrl: 'https://i.pravatar.cc/150?u=faculty-db',
+            status: 'approved',
+        },
+         {
+            id: 'faculty-cn',
+            username: 'prof.cn',
+            role: 'faculty',
+            password: 'password',
+            fullName: 'Dr. Olivia Martinez',
+            email: 'o.martinez@campusflow.app',
+            jobTitle: 'Lecturer',
+            department: 'Computer Science',
+            avatarUrl: 'https://i.pravatar.cc/150?u=faculty-cn',
+            status: 'approved',
+        }
+    ];
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(defaultUsers));
+    return defaultUsers;
 }
+
 
 // Helper to store users in localStorage
 const setStoredUsers = (users: User[]) => {

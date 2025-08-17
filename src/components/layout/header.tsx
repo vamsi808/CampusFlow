@@ -13,7 +13,8 @@ import {
   Shield,
   LogOut,
   UserPlus,
-  UserCheck
+  UserCheck,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 
 import {
@@ -44,6 +45,7 @@ import { useAuth } from '@/hooks/use-auth';
 const navLinks = [
   { href: '/', label: 'Dashboard', icon: Home },
   { href: '/reservations', label: 'My Reservations', icon: CalendarDays },
+  { href: '/timetable', label: 'Timetable', icon: CalendarIcon },
 ];
 
 const adminLinks = [
