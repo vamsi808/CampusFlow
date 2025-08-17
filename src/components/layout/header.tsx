@@ -76,7 +76,7 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center px-4 sm:px-6 lg:px-8">
         <div className="flex items-center">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="h-6 w-6 text-primary"><rect width="256" height="256" fill="none"/><path d="M216,216H40a8,8,0,0,1-8-8V88a8,8,0,0,1,8-8H216a8,8,0,0,1,8,8v120A8,8,0,0,1,216,216Z" opacity="0.2"/><path d="M32,88V208a8,8,0,0,0,8,8H216a8,8,0,0,0,8-8V88" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="160" y1="216" x2="160" y2="80" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="96" y1="216" x2="96" y2="80" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M224,88,128,32,32,88" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="h-6 w-6 text-primary"><rect width="256" height="256" fill="none"/><path d="M216,216H40a8,8,0,0,1-8-8V88a8,8,0,0,1,8-8H216a8,8,0,0,1,8,8v120A8,8,0,0,1,216,216Z" opacity="0.2"/><path d="M32,88V208a8,8,0,0,0,8,8H216a8,8,0,0,0,8-8V88" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/><line x1="160" y1="216" x2="160" y2="80" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/><line x1="96" y1="216" x2="96" y2="80" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/><path d="M224,88,128,32,32,88" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/></svg>
             <span>CampusFlow</span>
           </Link>
         </div>
@@ -193,7 +193,7 @@ export function Header() {
             </DropdownMenu>
             </>
           ) : (
-            <div className='md:flex items-center gap-2'>
+            <div className='flex items-center gap-2'>
                 <Button variant="outline" asChild>
                     <Link href="/login">
                         <User className="mr-2 h-4 w-4" />
@@ -268,5 +268,3 @@ export function Header() {
     </header>
   );
 }
-
-    
