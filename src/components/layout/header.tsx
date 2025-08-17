@@ -47,7 +47,7 @@ const navLinks = [
 ];
 
 const adminLinks = [
-    { href: '/admin', label: 'Admin', icon: Shield },
+    { href: '/admin', label: 'Resource Management', icon: Shield },
     { href: '/admin/approvals', label: 'Approvals', icon: UserCheck },
     { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
