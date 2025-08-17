@@ -2,6 +2,7 @@
 "use client";
 
 import Link from 'next/link';
+import * as React from 'react';
 import {
   Bell,
   CalendarDays,
@@ -57,6 +58,12 @@ const adminLinks = [
 
 export function Header() {
   const { user, logout } = useAuth();
+  const [isClient, setIsClient] = React.useState(false);
+  
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const notifications = user ? userNotifications(user.id) : [];
 
   const getInitials = (name: string) => {
@@ -103,111 +110,113 @@ export function Header() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          {user ? (
-            <>
-            <Popover>
-                <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
-                    {notifications.length > 0 &&
-                        <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-primary/90"></span>
-                        </span>
-                    }
-                     <span className="sr-only">Notifications</span>
-                </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80">
-                <div className="grid gap-4">
-                    <div className="space-y-2">
-                    <h4 className="font-medium leading-none">Notifications</h4>
-                     {notifications.length > 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                            You have {notifications.length} new messages.
-                        </p>
-                    ) : (
-                         <p className="text-sm text-muted-foreground">
-                            You have no new notifications.
-                        </p>
-                    )}
-                    </div>
-                    <div className="grid gap-2">
-                    {notifications.map((notification) => (
-                        <div
-                        key={notification.id}
-                        className="grid grid-cols-[25px_1fr] items-start pb-4 last:pb-0"
-                        >
-                        <span className="flex h-2 w-2 translate-y-1 rounded-full bg-primary" />
-                        <div className="grid gap-1">
-                            <p className="text-sm font-medium">{notification.title}</p>
-                            <p className="text-sm text-muted-foreground">{notification.description}</p>
-                            <p className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(notification.date, { addSuffix: true })}
-                            </p>
-                        </div>
-                        </div>
-                    ))}
-                    </div>
-                </div>
-                </PopoverContent>
-            </Popover>
-
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                    <Avatar className="h-9 w-9 border-2 border-primary/50">
-                    <AvatarImage src={user.avatarUrl} alt="User avatar" />
-                    <AvatarFallback className="bg-primary/20">{getInitials(user.fullName || user.username)}</AvatarFallback>
-                    </Avatar>
-                </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                        <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.fullName || user.username}</p>
-                        <p className="text-xs leading-none text-muted-foreground capitalize">
-                            {user.role}
-                        </p>
-                        </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                        <Link href="/profile">
-                            <User className="mr-2 h-4 w-4" />
-                            <span>Profile</span>
-                        </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                        <Link href="/settings">
-                            <Settings className="mr-2 h-4 w-4" />
-                            <span>Settings</span>
-                        </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={logout}>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Log out
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-            </>
-          ) : (
-            <div className='flex items-center gap-2'>
-                <Button variant="outline" asChild>
-                    <Link href="/login">
-                        <User className="mr-2 h-4 w-4" />
-                        Login
-                    </Link>
-                </Button>
-                <Button asChild>
-                    <Link href="/signup">
-                         <UserPlus className="mr-2 h-4 w-4" />
-                        Sign Up
-                    </Link>
-                </Button>
-            </div>
-          )}
+           {isClient && (
+            user ? (
+              <>
+              <Popover>
+                  <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative">
+                      <Bell className="h-5 w-5" />
+                      {notifications.length > 0 &&
+                          <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-3 w-3 bg-primary/90"></span>
+                          </span>
+                      }
+                       <span className="sr-only">Notifications</span>
+                  </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                  <div className="grid gap-4">
+                      <div className="space-y-2">
+                      <h4 className="font-medium leading-none">Notifications</h4>
+                       {notifications.length > 0 ? (
+                          <p className="text-sm text-muted-foreground">
+                              You have {notifications.length} new messages.
+                          </p>
+                      ) : (
+                           <p className="text-sm text-muted-foreground">
+                              You have no new notifications.
+                          </p>
+                      )}
+                      </div>
+                      <div className="grid gap-2">
+                      {notifications.map((notification) => (
+                          <div
+                          key={notification.id}
+                          className="grid grid-cols-[25px_1fr] items-start pb-4 last:pb-0"
+                          >
+                          <span className="flex h-2 w-2 translate-y-1 rounded-full bg-primary" />
+                          <div className="grid gap-1">
+                              <p className="text-sm font-medium">{notification.title}</p>
+                              <p className="text-sm text-muted-foreground">{notification.description}</p>
+                              <p className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(notification.date, { addSuffix: true })}
+                              </p>
+                          </div>
+                          </div>
+                      ))}
+                      </div>
+                  </div>
+                  </PopoverContent>
+              </Popover>
+  
+              <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                      <Avatar className="h-9 w-9 border-2 border-primary/50">
+                      <AvatarImage src={user.avatarUrl} alt="User avatar" />
+                      <AvatarFallback className="bg-primary/20">{getInitials(user.fullName || user.username)}</AvatarFallback>
+                      </Avatar>
+                  </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                      <DropdownMenuLabel className="font-normal">
+                          <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">{user.fullName || user.username}</p>
+                          <p className="text-xs leading-none text-muted-foreground capitalize">
+                              {user.role}
+                          </p>
+                          </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                          <Link href="/profile">
+                              <User className="mr-2 h-4 w-4" />
+                              <span>Profile</span>
+                          </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                          <Link href="/settings">
+                              <Settings className="mr-2 h-4 w-4" />
+                              <span>Settings</span>
+                          </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={logout}>
+                          <LogOut className="mr-2 h-4 w-4" />
+                          Log out
+                      </DropdownMenuItem>
+                  </DropdownMenuContent>
+              </DropdownMenu>
+              </>
+            ) : (
+              <div className='flex items-center gap-2'>
+                  <Button variant="outline" asChild>
+                      <Link href="/login">
+                          <User className="mr-2 h-4 w-4" />
+                          Login
+                      </Link>
+                  </Button>
+                  <Button asChild>
+                      <Link href="/signup">
+                           <UserPlus className="mr-2 h-4 w-4" />
+                          Sign Up
+                      </Link>
+                  </Button>
+              </div>
+            )
+           )}
 
 
           <Sheet>
