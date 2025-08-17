@@ -14,7 +14,8 @@ import {
   LogOut,
   UserPlus,
   UserCheck,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  Users2,
 } from 'lucide-react';
 
 import {
@@ -51,6 +52,7 @@ const navLinks = [
 const adminLinks = [
     { href: '/admin', label: 'Resource Management', icon: Shield },
     { href: '/admin/approvals', label: 'Approvals', icon: UserCheck },
+    { href: '/admin/sections', label: 'Section Management', icon: Users2 },
     { href: '/admin/settings', label: 'Admin Settings', icon: Settings },
 ];
 

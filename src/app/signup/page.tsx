@@ -15,17 +15,9 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import { departmentList } from '@/lib/data';
 
-const departments = [
-    "Computer Science and Engineering",
-    "Computer Science and Engineering Specialized in Data Science",
-    "Computer Science and Engineering Specialized in Artificial Intelligence & Machine Learning",
-    "Information Technology",
-    "Electronics and Communication Engineering",
-    "Electrical and Electronics Engineering",
-    "Mechanical Engineering",
-    "Aerospace Engineering"
-];
+const departments = departmentList;
 
 const signupSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),

@@ -5,19 +5,25 @@ import * as React from 'react';
 import { SectionTimetable } from "@/components/section-timetable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/hooks/use-auth';
-import { allSections, getSectionTimetable } from '@/lib/data';
-import type { TimetableEntry } from '@/lib/types';
+import { getSections, getSectionTimetable, departmentList } from '@/lib/data';
+import type { TimetableEntry, Section } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function TimetablePage() {
     const { user } = useAuth();
+    const [allSections, setAllSections] = React.useState<Section[]>([]);
     const [selectedYear, setSelectedYear] = React.useState<string>('all');
     const [selectedDepartment, setSelectedDepartment] = React.useState<string>('all');
     const [selectedSection, setSelectedSection] = React.useState<string>('');
     const [viewingTimetable, setViewingTimetable] = React.useState<TimetableEntry[] | null>(null);
 
-    const departments = React.useMemo(() => [...new Set(allSections.map(s => s.department))], []);
-    const years = React.useMemo(() => [...new Set(allSections.map(s => s.year))].sort(), []);
+     React.useEffect(() => {
+        // Fetch sections from localStorage on mount
+        setAllSections(getSections());
+    }, []);
+
+    const departments = React.useMemo(() => departmentList, []);
+    const years = React.useMemo(() => [...new Set(allSections.map(s => s.year))].sort(), [allSections]);
     
     const filteredSections = React.useMemo(() => {
         return allSections.filter(section => {
@@ -25,7 +31,7 @@ export default function TimetablePage() {
             const departmentMatch = selectedDepartment === 'all' || section.department === selectedDepartment;
             return yearMatch && departmentMatch;
         });
-    }, [selectedYear, selectedDepartment]);
+    }, [selectedYear, selectedDepartment, allSections]);
     
      React.useEffect(() => {
         if (user?.role === 'student' && user.sectionId) {

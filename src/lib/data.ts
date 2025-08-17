@@ -218,38 +218,37 @@ const initialResources: Resource[] = [
 ].map(r => ({ ...r, schedule: [] }));
 
 
-const departments = {
-    'CSE': "Computer Science and Engineering",
-    'CSDS': "CS & Engineering (Data Science)",
-    'CSAI': "CS & Engineering (AI/ML)",
-    'IT': "Information Technology",
-    'ECE': "Electronics and Communication Engineering",
-    'EEE': "Electrical and Electronics Engineering",
-    'ME': "Mechanical Engineering",
-    'AERO': "Aerospace Engineering"
-};
+export const departmentList = [
+    "Computer Science and Engineering",
+    "Computer Science and Engineering Specialized in Data Science",
+    "Computer Science and Engineering Specialized in Artificial Intelligence & Machine Learning",
+    "Information Technology",
+    "Electronics and Communication Engineering",
+    "Electrical and Electronics Engineering",
+    "Mechanical Engineering",
+    "Aerospace Engineering"
+];
 
-const sectionLetters: {[key: string]: string[]} = {
-    'CSE': ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
-    'CSDS': ['A', 'B', 'C'],
-    'CSAI': ['A', 'B', 'C'],
-    'ECE': ['A', 'B', 'C'],
-    'IT': ['A', 'B'],
-    'EEE': ['A'],
-    'ME': ['A'],
-    'AERO': ['A'],
+const initialSectionSetup = {
+    "Computer Science and Engineering": ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+    "Computer Science and Engineering Specialized in Data Science": ['A', 'B', 'C'],
+    "Computer Science and Engineering Specialized in Artificial Intelligence & Machine Learning": ['A', 'B', 'C'],
+    "Information Technology": ['A', 'B'],
+    "Electronics and Communication Engineering": ['A', 'B', 'C'],
+    "Electrical and Electronics Engineering": ['A'],
+    "Mechanical Engineering": ['A'],
+    "Aerospace Engineering": ['A'],
 };
 
 const generateAllSections = (): Section[] => {
     const sections: Section[] = [];
     for (let year = 1; year <= 4; year++) {
-        for (const deptKey in departments) {
-            const deptName = departments[deptKey as keyof typeof departments];
-            const letters = sectionLetters[deptKey];
+        for (const deptName in initialSectionSetup) {
+            const letters = initialSectionSetup[deptName as keyof typeof initialSectionSetup];
             for (const letter of letters) {
                 sections.push({
-                    id: `sec-${deptKey.toLowerCase()}-${letter.toLowerCase()}-${year}`,
-                    name: `${deptKey}-${letter}`,
+                    id: `sec-${deptName.split(' ').join('-').toLowerCase()}-${letter.toLowerCase()}-${year}`,
+                    name: `${deptName.split(' ')[0]}-${letter}`, // e.g. "Computer-A"
                     department: deptName,
                     year: year.toString(),
                 });
@@ -320,7 +319,7 @@ const generateWeeklyTimetable = (sectionId: string, weekStart: Date): TimetableE
 }
 
 // Store a sample for the default student user
-const initialTimetable = generateWeeklyTimetable('sec-it-b-2', startOfWeek(new Date(), { weekStartsOn: 1 }));
+const initialTimetable = generateWeeklyTimetable('sec-information-technology-b-2', startOfWeek(new Date(), { weekStartsOn: 1 }));
 
 
 // Initialize with default data if nothing is in localStorage
@@ -430,4 +429,26 @@ export const updateUserStatus = (userId: string, status: 'approved' | 'rejected'
     users[userIndex].status = status;
     setInStorage(USERS_STORAGE_KEY, users);
   }
+}
+
+// --- Section Management Functions ---
+
+export const getSections = (): Section[] => {
+    return getFromStorage<Section>(SECTIONS_STORAGE_KEY, []);
+}
+
+export const addSection = (section: Omit<Section, 'id'>) => {
+    const sections = getSections();
+    const newSection: Section = {
+        ...section,
+        id: `sec-${section.department.split(' ').join('-').toLowerCase()}-${section.name.toLowerCase()}-${section.year}`
+    };
+    sections.unshift(newSection);
+    setInStorage(SECTIONS_STORAGE_KEY, sections);
+}
+
+export const deleteSection = (id: string) => {
+    let sections = getSections();
+    sections = sections.filter(s => s.id !== id);
+    setInStorage(SECTIONS_STORAGE_KEY, sections);
 }
