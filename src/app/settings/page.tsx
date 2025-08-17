@@ -18,7 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Shield, Smartphone, Monitor } from 'lucide-react';
+import { Shield, Smartphone, Monitor, LifeBuoy, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 
 const profileSchema = z.object({
@@ -372,6 +372,21 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
       
+      <Card>
+        <CardHeader>
+            <CardTitle>Help &amp; Support</CardTitle>
+            <CardDescription>Find answers to your questions or get in touch with us.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            <Button variant="outline" className="w-full justify-start" disabled>
+                <LifeBuoy className="mr-2 h-4 w-4" /> View FAQ & Help Center
+            </Button>
+            <Button variant="outline" className="w-full justify-start" disabled>
+                <MessageSquare className="mr-2 h-4 w-4" /> Contact Support & Provide Feedback
+            </Button>
+        </CardContent>
+      </Card>
+
       <Card>
           <CardHeader>
               <CardTitle>Danger Zone</CardTitle>
