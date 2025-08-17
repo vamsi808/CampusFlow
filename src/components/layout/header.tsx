@@ -89,7 +89,7 @@ export function Header() {
         </div>
 
         <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 ml-10">
-          {user && navLinks.map(link => (
+          {isClient && user && navLinks.map(link => (
             <Link
               key={link.href}
               href={link.href}
@@ -98,7 +98,7 @@ export function Header() {
               {link.label}
             </Link>
           ))}
-          {user?.role === 'admin' && adminLinks.map(link => (
+          {isClient && user?.role === 'admin' && adminLinks.map(link => (
              <Link
              key={link.href}
              href={link.href}
@@ -228,7 +228,7 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="left">
                 <nav className="grid gap-6 text-lg font-medium mt-8">
-                {user ? (
+                {isClient && user ? (
                     <>
                     {navLinks.map(link => (
                         <SheetClose asChild key={link.href}>
