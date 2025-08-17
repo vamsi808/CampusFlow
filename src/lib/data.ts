@@ -217,40 +217,97 @@ const initialResources: Resource[] = [
   },
 ].map(r => ({ ...r, schedule: [] }));
 
-const initialSections: Section[] = [
-    { id: 'sec-it-b-2', name: 'IT-B', department: 'Information Technology', year: '2' },
-];
+
+const departments = {
+    'CSE': "Computer Science and Engineering",
+    'CSDS': "CS & Engineering (Data Science)",
+    'CSAI': "CS & Engineering (AI/ML)",
+    'IT': "Information Technology",
+    'ECE': "Electronics and Communication Engineering",
+    'EEE': "Electrical and Electronics Engineering",
+    'ME': "Mechanical Engineering",
+    'AERO': "Aerospace Engineering"
+};
+
+const sectionLetters: {[key: string]: string[]} = {
+    'CSE': ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+    'CSDS': ['A', 'B', 'C'],
+    'CSAI': ['A', 'B', 'C'],
+    'ECE': ['A', 'B', 'C'],
+    'IT': ['A', 'B'],
+    'EEE': ['A'],
+    'ME': ['A'],
+    'AERO': ['A'],
+};
+
+const generateAllSections = (): Section[] => {
+    const sections: Section[] = [];
+    for (let year = 1; year <= 4; year++) {
+        for (const deptKey in departments) {
+            const deptName = departments[deptKey as keyof typeof departments];
+            const letters = sectionLetters[deptKey];
+            for (const letter of letters) {
+                sections.push({
+                    id: `sec-${deptKey.toLowerCase()}-${letter.toLowerCase()}-${year}`,
+                    name: `${deptKey}-${letter}`,
+                    department: deptName,
+                    year: year.toString(),
+                });
+            }
+        }
+    }
+    return sections;
+};
+
+const initialSections = generateAllSections();
+
+const allFaculties = () => getFromStorage<User>(USERS_STORAGE_KEY, []).filter(u => u.role === 'faculty');
+const allClassrooms = () => getFromStorage<Resource>(RESOURCES_STORAGE_KEY, []).filter(r => r.type === 'Classroom' || r.type === 'Lab');
 
 const generateWeeklyTimetable = (sectionId: string, weekStart: Date): TimetableEntry[] => {
     const timetable: TimetableEntry[] = [];
+    const faculties = allFaculties();
+    const rooms = allClassrooms();
+
+    if (faculties.length === 0 || rooms.length === 0) return [];
+    
+    // Create a deterministic seed from the sectionId to make timetables unique but consistent
+    const seed = sectionId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    
     const subjects = [
-        { name: 'Data Structures', facultyId: 'faculty-ds', roomId: 'room-cb-301', duration: 50 },
-        { name: 'Operating Systems', facultyId: 'faculty-os', roomId: 'room-cb-302', duration: 50 },
-        { name: 'Web Technologies', facultyId: 'faculty-web', roomId: 'lab-it-505', duration: 100 },
-        { name: 'Database Management', facultyId: 'faculty-db', roomId: 'room-cb-301', duration: 50 },
-        { name: 'Computer Networks', facultyId: 'faculty-cn', roomId: 'room-cb-302', duration: 50 },
+        { name: 'Data Structures', duration: 50 },
+        { name: 'Operating Systems', duration: 50 },
+        { name: 'Web Technologies', duration: 100 },
+        { name: 'Database Management', duration: 50 },
+        { name: 'Computer Networks', duration: 50 },
+        { name: 'Compiler Design', duration: 50 },
+        { name: 'Software Engineering', duration: 100 },
     ];
 
     const schedule = {
         1: [{ time: '09:00', subject: 0 }, { time: '10:00', subject: 1 }, { time: '11:00', subject: 2 }], // Monday
         2: [{ time: '09:00', subject: 3 }, { time: '10:00', subject: 4 }, { time: '13:00', subject: 0 }], // Tuesday
         3: [{ time: '10:00', subject: 1 }, { time: '11:00', subject: 2 }, { time: '14:00', subject: 3 }], // Wednesday
-        4: [{ time: '09:00', subject: 4 }, { time: '11:00', subject: 0 }, { time: '13:00', subject: 1 }], // Thursday
-        5: [{ time: '10:00', subject: 2 }, { time: '11:00', subject: 3 }, { time: '14:00', subject: 4 }], // Friday
+        4: [{ time: '09:00', subject: 4 }, { time: '11:00', subject: 5 }, { time: '13:00', subject: 1 }], // Thursday
+        5: [{ time: '10:00', subject: 6 }, { time: '11:00', subject: 3 }, { time: '14:00', subject: 5 }], // Friday
     };
 
     Object.entries(schedule).forEach(([day, classes]) => {
         const currentDay = addDays(weekStart, parseInt(day) - 1);
-        classes.forEach(c => {
-            const subject = subjects[c.subject];
+        classes.forEach((c, classIndex) => {
+            const subjectIndex = (c.subject + seed) % subjects.length;
+            const subject = subjects[subjectIndex];
+            const faculty = faculties[(subjectIndex + seed) % faculties.length];
+            const room = rooms[(classIndex + seed) % rooms.length];
+
             const [hour, minute] = c.time.split(':');
             const startTime = setMinutes(setHours(currentDay, parseInt(hour)), parseInt(minute));
             const endTime = addMinutes(startTime, subject.duration);
             timetable.push({
                 id: `tt-${sectionId}-${day}-${c.time}`,
                 subjectName: subject.name,
-                facultyId: subject.facultyId,
-                roomId: subject.roomId,
+                facultyId: faculty.id,
+                roomId: room.id,
                 sectionId: sectionId,
                 startTime: startTime,
                 endTime: endTime,
@@ -262,6 +319,7 @@ const generateWeeklyTimetable = (sectionId: string, weekStart: Date): TimetableE
     return timetable;
 }
 
+// Store a sample for the default student user
 const initialTimetable = generateWeeklyTimetable('sec-it-b-2', startOfWeek(new Date(), { weekStartsOn: 1 }));
 
 
@@ -295,7 +353,6 @@ export const allResources = ((): Resource[] => {
 
 export const allBookings = getFromStorage(BOOKINGS_STORAGE_KEY, []);
 export const allSections = getFromStorage(SECTIONS_STORAGE_KEY, []);
-export const allTimetableEntries = getFromStorage(TIMETABLE_STORAGE_KEY, []);
 
 
 export const resourceTypes = [...new Set(allResources.map(r => r.type))];
@@ -307,8 +364,8 @@ export const userReservations = (userId: string): Booking[] => {
 }
 
 export const getSectionTimetable = (sectionId: string): TimetableEntry[] => {
-    const timetable = getFromStorage(TIMETABLE_STORAGE_KEY, []);
-    return timetable.filter(entry => entry.sectionId === sectionId);
+    // Return a dynamically generated, but consistent, timetable for any section.
+    return generateWeeklyTimetable(sectionId, startOfWeek(new Date(), { weekStartsOn: 1 }));
 }
 
 export const allUsers = getFromStorage(USERS_STORAGE_KEY, []);

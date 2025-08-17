@@ -13,9 +13,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { ScrollArea } from './ui/scroll-area';
 
-export function SectionTimetable() {
-    const { user, isLoading } = useAuth();
-    const [timetable, setTimetable] = React.useState<TimetableEntry[]>([]);
+interface SectionTimetableProps {
+    timetable: TimetableEntry[];
+}
+
+export function SectionTimetable({ timetable }: SectionTimetableProps) {
+    const { isLoading } = useAuth();
     const [now, setNow] = React.useState(new Date());
 
     React.useEffect(() => {
@@ -23,27 +26,22 @@ export function SectionTimetable() {
         return () => clearInterval(timer);
     }, []);
 
-    React.useEffect(() => {
-        if (user?.role === 'student' && user.sectionId) {
-            const userTimetable = getSectionTimetable(user.sectionId);
-            setTimetable(userTimetable);
-        }
-        // TODO: Add logic for faculty and admin roles
-    }, [user]);
-
     if (isLoading) {
         return <TimetableSkeleton />;
     }
-
-    if (!user) {
-        return <div className="text-center text-muted-foreground">Please log in to view your timetable.</div>;
+    
+    if (!timetable || timetable.length === 0) {
+        return (
+             <div className="text-center text-muted-foreground py-12">
+                No timetable available for this selection.
+            </div>
+        )
     }
 
-    // For now, all roles will see the student timetable view in a tabular format.
-    return <StudentTimetableView timetable={timetable} now={now} />;
+    return <TimetableView timetable={timetable} now={now} />;
 }
 
-const StudentTimetableView = ({ timetable, now }: { timetable: TimetableEntry[], now: Date }) => {
+const TimetableView = ({ timetable, now }: { timetable: TimetableEntry[], now: Date }) => {
     const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
     const weekDays = eachDayOfInterval({
         start: weekStart,
@@ -115,7 +113,9 @@ const StudentTimetableView = ({ timetable, now }: { timetable: TimetableEntry[],
                                     if (rowSpan > 1) {
                                         if (!processedSlots[dayKey]) processedSlots[dayKey] = [];
                                         for (let i = 1; i < rowSpan; i++) {
-                                            processedSlots[dayKey].push(timeSlots[index + i]);
+                                            if (timeSlots[index + i]) {
+                                               processedSlots[dayKey].push(timeSlots[index + i]);
+                                            }
                                         }
                                     }
                                     
