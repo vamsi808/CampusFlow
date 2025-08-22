@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/hooks/use-auth';
 
 export const metadata: Metadata = {
-  title: 'CampusFlow',
+  title: 'AI-Powered Campus Resource Management Using Next.js with a Genkit Recommendation Engine',
   description: 'Streamline your campus resource management.',
 };
 
