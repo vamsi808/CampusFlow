@@ -1,66 +1,80 @@
-
 # AI-Powered Campus Resource Management System (CampusFlow)
 
 ## 1. Abstract
 
-The AI-Powered Campus Resource Management System is a full-stack web application designed to modernize and streamline the process of booking shared resources within an educational institution. Built on a robust Next.js and TypeScript foundation, the platform provides a seamless, role-based experience for students, faculty, and administrators. Key features include a dynamic resource browser with filtering capabilities, a real-time availability viewer for each resource, and a comprehensive admin dashboard for managing users, resources, and academic sections. A core innovation of the system is its integrated AI recommendation engine, powered by Genkit, which intelligently suggests alternative resources when a user's initial choice is unavailable, thereby optimizing resource utilization and enhancing the overall campus experience. The project demonstrates a modern approach to EdTech solutions, combining a responsive user interface with a powerful, AI-driven backend to solve a common logistical challenge in academic environments.
+CampusFlow is a full-stack web application designed to modernize and streamline the process of booking shared resources within an educational institution. Built with a robust Next.js and TypeScript foundation, the platform provides a seamless, role-based experience for students, faculty, and administrators. Key features include a dynamic resource browser, a real-time availability viewer, and a comprehensive admin dashboard. A core innovation is its integrated AI recommendation engine, powered by Genkit, which intelligently suggests alternative resources when a user's initial choice is unavailable, thereby optimizing resource utilization and enhancing the overall campus experience. This project demonstrates a modern approach to EdTech, combining a responsive UI with a powerful, AI-driven backend to solve a common logistical challenge in academic environments.
 
-## 2. Alignment with Sustainable Development Goals (SDGs)
+## 2. Purpose and Vision
 
-This project contributes to the following UN Sustainable Development Goals:
+The primary purpose of CampusFlow is to replace outdated, manual, or fragmented resource booking systems with a single, centralized, and intelligent platform. Our vision is to create a frictionless campus experience where students and faculty can instantly find and reserve the spaces and equipment they need, while administrators gain powerful tools to manage and optimize university assets efficiently.
 
-*   **SDG 9: Industry, Innovation, and Infrastructure:** By implementing a modern digital infrastructure (the booking platform) over the university's physical assets, the project fosters innovation through its AI recommendation engine and promotes inclusive access to campus resources.
+## 3. Key Features
 
+### 3.1. For Students
+- **Account Registration:** Sign up for an account that is then sent to an administrator for approval.
+- **Role-Specific Resource Browsing:** View and filter a catalog of resources specifically designated for student use.
+- **Seamless Booking:** Check real-time availability and book resources like study rooms, sports facilities, and studio equipment.
+- **AI-Powered Recommendations:** If a desired resource is booked, the system provides intelligent alternative suggestions.
+- **Personalized Timetable:** View a personal weekly class schedule at a glance.
+- **Profile Management:** Update personal information and profile picture.
+
+### 3.2. For Faculty
+- **Dedicated Resource Access:** Browse and book resources reserved for faculty, such as advanced labs, conference rooms, and auditoriums.
+- **Teaching Schedule:** Faculty members are assigned to courses and appear in the student timetables.
+- **Profile Management:** Manage professional details and contact information.
+- *(All student features are also available to faculty).*
+
+### 3.3. For Administrators
+- **Comprehensive Dashboard:** A central control panel to manage all aspects of the platform.
+- **User Approval Management:** View, approve, or reject new student and faculty registration requests.
+- **Resource Management:** Add, edit, or delete any campus resource, including details like name, location, capacity, and image.
+- **Section & Timetable Management:** Create and manage academic sections for different departments and years, which dynamically generates the timetables for students.
+- **Global Timetable View:** Ability to look up the timetable for any section across the university.
+
+## 4. User Roles and Interconnections
+
+The three user roles are deeply interconnected, creating a realistic campus workflow:
+
+1.  **Onboarding Workflow:** A **Student** or **Faculty** member signs up. Their account is created with a `pending` status. An **Admin** sees this request in the "Approvals" dashboard and can `approve` or `reject` it. Only upon approval can the user log in and access the platform's features.
+
+2.  **Resource & Booking Workflow:** An **Admin** curates the list of available resources. **Students** and **Faculty** can then browse and book these resources based on their role. Their bookings are recorded in a central bookings log, which is used to display real-time availability to all users.
+
+3.  **Academic Workflow:** An **Admin** defines the academic structure by creating `Sections` (e.g., "Year 2, IT-B"). The system then dynamically generates a `Timetable` for that section, assigning **Faculty** members and classrooms (**Resources**) to specific subjects and time slots. A **Student** belonging to that section can then view their personalized schedule.
+
+## 5. Alignment with Sustainable Development Goals (SDGs)
+
+This project contributes to the following UN SDGs:
+
+*   **SDG 9: Industry, Innovation, and Infrastructure:** By implementing a modern digital infrastructure over the university's physical assets, the project fosters innovation through its AI recommendation engine and promotes inclusive access to campus resources.
 *   **SDG 11: Sustainable Cities and Communities:** Viewing the campus as a micro-community, the system enhances access to essential public spaces and services, improving quality of life and ensuring the balanced, sustainable use of the campus footprint.
+*   **SDG 12: Responsible Consumption and Production:** The platform promotes the efficient use of shared resources, minimizing the waste associated with underutilized facilities and providing administrators with data to make sustainable long-term decisions about resource allocation.
 
-*   **SDG 12: Responsible Consumption and Production:** The platform promotes the efficient use of shared resources, minimizing the waste associated with underutilized facilities and providing administrators with data to make sustainable long-term decisions about resource allocation and energy consumption.
+## 6. Technical Architecture and Proposed Algorithms
 
-## 3. Requirements
-
-### 3.1. Functional Requirements
-
-- **User Authentication:** Role-based access control for Students, Faculty, and Administrators, including sign-up with admin approval.
-- **Resource Booking:** A filterable catalog of campus resources, real-time schedule viewing, and a seamless booking process.
-- **AI Recommendations:** An intelligent recommendation engine (via Genkit) that suggests alternative resources when a user's choice is unavailable.
-- **Admin Dashboard:** A comprehensive interface for administrators to manage user approvals, add/delete resources, and manage academic sections.
-- **Timetable Viewing:** A personalized view of weekly class timetables for students and a global view for administrators.
-
-### 3.2. Non-Functional Requirements
-
-- **Performance:** Fast page loads and instantaneous UI feedback for filtering and searching.
-- **Usability:** An intuitive, responsive design that works flawlessly on desktop, tablet, and mobile devices.
-- **Security:** Secure access control based on user roles to protect sensitive data and administrative functions.
-- **Maintainability:** A clean, component-based architecture for easy updates and future development.
-
-## 4. Technical Architecture and Proposed Algorithms
-
-### 4.1. Tech Stack
-
+### 6.1. Tech Stack
 - **Frontend:** Next.js (React), TypeScript, Tailwind CSS, ShadCN UI
 - **Backend:** Next.js Server Actions, Node.js
 - **AI/ML:** Genkit (with Google's Gemini model)
 - **Database (Prototype):** Local Storage API to simulate a database for rapid prototyping.
 
-### 4.2. Proposed Algorithms & Techniques
+### 6.2. Proposed Algorithms & Techniques
 
-1.  **AI Recommendation Engine:** Utilizes a Large Language Model (LLM) via Genkit. The system sends contextual data (e.g., resource type, capacity, time) to a prompt-engineered flow, which returns structured JSON output containing intelligent, human-like recommendations and reasoning.
+1.  **AI Recommendation Engine:** Utilizes a Large Language Model (LLM) via Genkit. The system sends contextual data (resource type, capacity, time, purpose) to a prompt-engineered flow, which returns structured JSON output containing intelligent, human-like recommendations and reasoning.
 
 2.  **Client-Side Filtering:** The resource browser uses a multi-criteria filtering algorithm memoized with React's `useMemo` hook. This ensures the UI remains highly responsive by only re-calculating the filtered list when a search or filter parameter changes.
 
 3.  **Secure Authentication (Production Proposal):** For a production environment, the system is designed to incorporate a standard password-hashing algorithm like **bcrypt** or **Argon2** to ensure user credentials are secure.
 
-## 5. Software and Hardware Requirements
+## 7. Software and Hardware Requirements
 
-### 5.1. Hardware (Development)
-
+### 7.1. Hardware (Development)
 | Component | Minimum | Recommended |
 | :--- | :--- | :--- |
 | **CPU** | Dual-core (2.0 GHz) | Quad-core (Intel i5/AMD Ryzen 5 or better) |
 | **RAM** | 8 GB | 16 GB or more |
 | **Storage** | 128 GB SSD (10 GB free) | 256 GB NVMe SSD or larger |
 
-### 5.2. Software (Development)
-
+### 7.2. Software (Development)
 | Category | Software | Version/Type |
 | :--- | :--- | :--- |
 | **OS** | Windows, macOS, or Linux | Latest stable versions |
@@ -69,7 +83,7 @@ This project contributes to the following UN Sustainable Development Goals:
 | **Code Editor**| VS Code, WebStorm, etc. | Any modern IDE |
 | **Browser** | Chrome, Firefox, etc. | Latest stable versions |
 
-## 6. Project Setup and Installation
+## 8. Project Setup and Installation
 
 To run this project locally, follow these steps:
 
@@ -85,7 +99,7 @@ To run this project locally, follow these steps:
 
 3.  **View the Application:** Open your web browser and navigate to [http://localhost:9002](http://localhost:9002). The CampusFlow application should now be running.
 
-## 7. Project Structure
+## 9. Project Structure
 
 The project follows a standard Next.js App Router structure. Key directories include:
 
@@ -101,9 +115,10 @@ The project follows a standard Next.js App Router structure. Key directories inc
   - **/src/lib/data.ts**: The mock data generation and management logic.
   - **/src/lib/firebase.ts**: Firebase configuration.
   - **/src/lib/types.ts**: TypeScript type definitions.
-- **/src/hooks/**: Custom React hooks, such as `useAuth.tsx`.
+- **/src/hooks/**: Custom React hooks, such as `use-auth.tsx`.
 - **/src/ai/**: Contains all Genkit-related AI flows and configurations.
   - **/src/ai/flows/**: The specific AI recommendation logic.
 - **/public/**: Static assets like images and fonts.
 - **tailwind.config.ts**: Configuration file for Tailwind CSS.
 - **next.config.ts**: Configuration file for Next.js.
+```
