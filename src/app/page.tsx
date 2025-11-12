@@ -9,6 +9,7 @@ import { ResourceCard } from '@/components/resource-card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { Building, Filter, Search } from 'lucide-react';
+import { AssistantPanel } from '@/components/assistant-panel';
 
 export default function ResourceBrowserPage() {
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -106,6 +107,8 @@ export default function ResourceBrowserPage() {
           <p>Try adjusting your search or filters.</p>
         </div>
       )}
+
+      {isClient && user?.role === 'student' && <AssistantPanel />}
     </div>
   );
 }
