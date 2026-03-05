@@ -1,9 +1,8 @@
-
 "use client";
 
 import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { getSectionTimetable, allUsers, allResources } from '@/lib/data';
+import { allUsers, allResources } from '@/lib/data';
 import type { TimetableEntry } from '@/lib/types';
 import { addDays, eachDayOfInterval, format, isSameDay, startOfWeek, isWithinInterval, isPast, isFuture, startOfDay, getHours, differenceInMinutes, set } from 'date-fns';
 import { Skeleton } from './ui/skeleton';
@@ -43,7 +42,7 @@ export function SectionTimetable({ timetable }: SectionTimetableProps) {
 }
 
 const TimetableView = ({ timetable, now }: { timetable: TimetableEntry[], now: Date }) => {
-    const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+    const weekStart = startOfWeek(now, { weekStartsOn: 1 });
     const weekDays = eachDayOfInterval({
         start: weekStart,
         end: addDays(weekStart, 4), // Mon-Fri
@@ -54,13 +53,13 @@ const TimetableView = ({ timetable, now }: { timetable: TimetableEntry[], now: D
 
     const findNextClass = (entries: TimetableEntry[]) => {
         return entries
-            .filter(entry => isFuture(entry.startTime))
-            .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())[0];
+            .filter(entry => isFuture(new Date(entry.startTime)))
+            .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())[0];
     };
     const nextClass = findNextClass(timetable);
 
     const timeSlots = Array.from({ length: 11 }, (_, i) => { // 8 AM to 6 PM
-        const time = set(startOfDay(new Date()), { hours: 8 + i, minutes: 0 });
+        const time = set(startOfDay(now), { hours: 8 + i, minutes: 0 });
         return format(time, 'h:mm a');
     });
 
@@ -73,13 +72,13 @@ const TimetableView = ({ timetable, now }: { timetable: TimetableEntry[], now: D
         const slotTime = set(day, { hours: hour, minutes: 0 });
 
         return timetable.find(entry => 
-            isSameDay(entry.startTime, day) && 
-            getHours(entry.startTime) === getHours(slotTime)
+            isSameDay(new Date(entry.startTime), day) && 
+            getHours(new Date(entry.startTime)) === getHours(slotTime)
         );
     };
     
     const getRowSpan = (entry: TimetableEntry) => {
-        const durationInMinutes = differenceInMinutes(entry.endTime, entry.startTime);
+        const durationInMinutes = differenceInMinutes(new Date(entry.endTime), new Date(entry.startTime));
         return Math.ceil(durationInMinutes / 60);
     }
     
@@ -122,8 +121,8 @@ const TimetableView = ({ timetable, now }: { timetable: TimetableEntry[], now: D
                                     
                                     const faculty = faculties.find(f => f.id === entry.facultyId);
                                     const room = rooms.find(r => r.id === entry.roomId);
-                                    const isOngoing = isWithinInterval(now, { start: entry.startTime, end: entry.endTime });
-                                    const isCompleted = isPast(entry.endTime);
+                                    const isOngoing = isWithinInterval(now, { start: new Date(entry.startTime), end: new Date(entry.endTime) });
+                                    const isCompleted = isPast(new Date(entry.endTime));
                                     const isNext = nextClass?.id === entry.id;
 
                                     return (
@@ -157,7 +156,7 @@ const TimetableView = ({ timetable, now }: { timetable: TimetableEntry[], now: D
                                                         <span>{room?.name || 'N/A'}</span>
                                                     </div>
                                                 </div>
-                                                <div className="text-xs text-muted-foreground pt-1">{format(entry.startTime, 'h:mm a')} - {format(entry.endTime, 'h:mm a')}</div>
+                                                <div className="text-xs text-muted-foreground pt-1">{format(new Date(entry.startTime), 'h:mm a')} - {format(new Date(entry.endTime), 'h:mm a')}</div>
                                             </div>
                                         </TableCell>
                                     );

@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from 'react';
@@ -33,17 +32,20 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
   const [isBookingConfirmOpen, setBookingConfirmOpen] = React.useState(false);
   const [isAlternativesModalOpen, setAlternativesModalOpen] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
+  const [now, setNow] = React.useState<Date | null>(null);
 
   const { toast } = useToast();
   const { user } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
+  React.useEffect(() => {
     setIsClient(true);
-    setDate(new Date());
+    const currentDate = new Date();
+    setDate(currentDate);
+    setNow(currentDate);
   }, []);
 
-  const today = startOfDay(new Date());
+  const today = now ? startOfDay(now) : new Date();
   const selectedDate = date ? startOfDay(date) : today;
 
   const timeSlots = React.useMemo(() => {
@@ -55,15 +57,15 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
   }, [selectedDate]);
 
   const bookingsForDay = React.useMemo(() => resource.schedule?.filter(
-    (booking) => format(booking.startTime, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
+    (booking) => format(new Date(booking.startTime), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
   ) || [], [resource.schedule, selectedDate]);
   
 
   const handleSlotClick = (slot: Date) => {
     setSelectedSlot(slot);
     const isBooked = bookingsForDay.some(b =>
-        isSameHour(b.startTime, slot) ||
-        isWithinInterval(slot, { start: b.startTime, end: b.endTime })
+        isSameHour(new Date(b.startTime), slot) ||
+        isWithinInterval(slot, { start: new Date(b.startTime), end: new Date(b.endTime) })
     );
 
     if (isBooked) {
@@ -116,8 +118,8 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
              <Skeleton key={i} className="h-9 w-full" />
           ))}
           {isClient && timeSlots.map((time, i) => {
-            const isPast = isBefore(time, new Date());
-            const isBooked = bookingsForDay.some(b => isSameHour(b.startTime, time) || isWithinInterval(time, { start: b.startTime, end: b.endTime }));
+            const isPast = now ? isBefore(time, now) : false;
+            const isBooked = bookingsForDay.some(b => isSameHour(new Date(b.startTime), time) || isWithinInterval(time, { start: new Date(b.startTime), end: new Date(b.endTime) }));
             return (
               <Button
                 key={i}
