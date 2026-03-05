@@ -19,14 +19,15 @@ interface SectionTimetableProps {
 
 export function SectionTimetable({ timetable }: SectionTimetableProps) {
     const { isLoading } = useAuth();
-    const [now, setNow] = React.useState(new Date());
+    const [now, setNow] = React.useState<Date | null>(null);
 
     React.useEffect(() => {
+        setNow(new Date());
         const timer = setInterval(() => setNow(new Date()), 60000); // Update every minute
         return () => clearInterval(timer);
     }, []);
 
-    if (isLoading) {
+    if (isLoading || !now) {
         return <TimetableSkeleton />;
     }
     

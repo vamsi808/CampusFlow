@@ -28,7 +28,7 @@ interface ScheduleViewerProps {
 }
 
 export function ScheduleViewer({ resource }: ScheduleViewerProps) {
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [date, setDate] = React.useState<Date | undefined>(undefined);
   const [selectedSlot, setSelectedSlot] = React.useState<Date | null>(null);
   const [isBookingConfirmOpen, setBookingConfirmOpen] = React.useState(false);
   const [isAlternativesModalOpen, setAlternativesModalOpen] = React.useState(false);
@@ -37,6 +37,11 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    setIsClient(true);
+    setDate(new Date());
+  }, []);
 
   const today = startOfDay(new Date());
   const selectedDate = date ? startOfDay(date) : today;
@@ -53,10 +58,6 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
     (booking) => format(booking.startTime, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
   ) || [], [resource.schedule, selectedDate]);
   
-  React.useEffect(() => {
-    setIsClient(true);
-  }, []);
-
 
   const handleSlotClick = (slot: Date) => {
     setSelectedSlot(slot);
@@ -172,5 +173,3 @@ export function ScheduleViewer({ resource }: ScheduleViewerProps) {
     </div>
   );
 }
-
-
