@@ -17,6 +17,7 @@ The primary purpose of CampusFlow is to replace outdated, manual, or fragmented 
 - **AI-Powered Recommendations:** If a desired resource is booked, the system provides intelligent alternative suggestions.
 - **Personalized Timetable:** View a personal weekly class schedule at a glance.
 - **Profile Management:** Update personal information and profile picture.
+- **AI Assistant:** Chat with a dedicated AI assistant to find resources or check schedules.
 
 ### 3.2. For Faculty
 - **Dedicated Resource Access:** Browse and book resources reserved for faculty, such as advanced labs, conference rooms, and auditoriums.
@@ -31,7 +32,23 @@ The primary purpose of CampusFlow is to replace outdated, manual, or fragmented 
 - **Section & Timetable Management:** Create and manage academic sections for different departments and years, which dynamically generates the timetables for students.
 - **Global Timetable View:** Ability to look up the timetable for any section across the university.
 
-## 4. User Roles and Interconnections
+## 4. Test Accounts
+
+You can use the following default credentials to explore the application:
+
+### Administrator
+- **Username:** `admin`
+- **Password:** `admin@123`
+
+### Student
+- **Username:** `student`
+- **Password:** `student@123`
+
+### Faculty
+- **Username:** `prof.ds`
+- **Password:** `password`
+
+## 5. User Roles and Interconnections
 
 The three user roles are deeply interconnected, creating a realistic campus workflow:
 
@@ -41,7 +58,7 @@ The three user roles are deeply interconnected, creating a realistic campus work
 
 3.  **Academic Workflow:** An **Admin** defines the academic structure by creating `Sections` (e.g., "Year 2, IT-B"). The system then dynamically generates a `Timetable` for that section, assigning **Faculty** members and classrooms (**Resources**) to specific subjects and time slots. A **Student** belonging to that section can then view their personalized schedule.
 
-## 5. Alignment with Sustainable Development Goals (SDGs)
+## 6. Alignment with Sustainable Development Goals (SDGs)
 
 This project contributes to the following UN SDGs:
 
@@ -49,15 +66,54 @@ This project contributes to the following UN SDGs:
 *   **SDG 11: Sustainable Cities and Communities:** Viewing the campus as a micro-community, the system enhances access to essential public spaces and services, improving quality of life and ensuring the balanced, sustainable use of the campus footprint.
 *   **SDG 12: Responsible Consumption and Production:** The platform promotes the efficient use of shared resources, minimizing the waste associated with underutilized facilities and providing administrators with data to make sustainable long-term decisions about resource allocation.
 
-## 6. Technical Architecture and Proposed Algorithms
+## 7. Future Work: Proposed Enhancement
 
-### 6.1. Tech Stack
+### Role-Specific AI Assistant Integration
+
+#### 1. Overview
+Introduce a Multi-Agent AI Assistant System embedded within CampusFlow that interacts contextually with each user type — Student, Faculty, and Administrator — performing tasks, answering queries, and automating actions based on user-defined requests. This will transform CampusFlow into a conversational, task-executing AI ecosystem rather than a standard management portal.
+
+#### 2. Role-Specific AI Agents
+
+**a) Student AI Assistant**
+- Helps students find and book available resources like labs, classrooms, or sports facilities using natural language prompts.
+- Provides personalized timetable summaries, deadline reminders, and class updates.
+- Suggests best time slots or alternative resources based on availability and the student’s schedule.
+- Answers academic or administrative FAQs using trained data from the campus knowledge base.
+
+**b) Faculty AI Assistant**
+- Automatically schedules lectures, lab sessions, and departmental meetings based on faculty preferences and existing timetables.
+- Manages resource requests for teaching materials or specialized equipment.
+- Generates quick reports on attendance, session usage, and resource engagement.
+- Provides teaching assistance by retrieving course content or resource availability on demand.
+
+**c) Administrator AI Assistant**
+- Executes automated approval workflows for new user registrations and booking requests.
+- Monitors system analytics and generates AI-driven insights on utilization efficiency, bottlenecks, and sustainability metrics.
+- Uses predictive AI to forecast demand trends and recommend resource expansion or optimization.
+- Responds to administrative queries and manages campus-wide scheduling conflicts automatically.
+
+#### 3. Core Technology Integration
+- Built using Genkit’s multi-agent orchestration with Google Gemini AI models for contextual understanding and intent classification.
+- Each role-specific agent is fine-tuned with domain-specific data (e.g., student activities, faculty routines, administrative tasks).
+- AI operates via a natural language interface in both text and voice, accessible within each dashboard.
+- Agents communicate through a central coordination module to ensure consistent data flow and prevent task overlap.
+
+#### 4. Key Benefits
+- Fully automates campus operations with minimal manual intervention.
+- Provides a personalized AI assistant experience for every user category.
+- Enhances decision-making, time management, and resource efficiency.
+- Makes the system truly intelligent, conversational, and user-adaptive, setting a new benchmark for smart campus platforms.
+
+## 8. Technical Architecture and Proposed Algorithms
+
+### 8.1. Tech Stack
 - **Frontend:** Next.js (React), TypeScript, Tailwind CSS, ShadCN UI
 - **Backend:** Next.js Server Actions, Node.js
 - **AI/ML:** Genkit (with Google's Gemini model)
 - **Database (Prototype):** Local Storage API to simulate a database for rapid prototyping.
 
-### 6.2. Proposed Algorithms & Techniques
+### 8.2. Proposed Algorithms & Techniques
 
 1.  **AI Recommendation Engine:** Utilizes a Large Language Model (LLM) via Genkit. The system sends contextual data (resource type, capacity, time, purpose) to a prompt-engineered flow, which returns structured JSON output containing intelligent, human-like recommendations and reasoning.
 
@@ -65,16 +121,16 @@ This project contributes to the following UN SDGs:
 
 3.  **Secure Authentication (Production Proposal):** For a production environment, the system is designed to incorporate a standard password-hashing algorithm like **bcrypt** or **Argon2** to ensure user credentials are secure.
 
-## 7. Software and Hardware Requirements
+## 9. Software and Hardware Requirements
 
-### 7.1. Hardware (Development)
+### 9.1. Hardware (Development)
 | Component | Minimum | Recommended |
 | :--- | :--- | :--- |
 | **CPU** | Dual-core (2.0 GHz) | Quad-core (Intel i5/AMD Ryzen 5 or better) |
 | **RAM** | 8 GB | 16 GB or more |
 | **Storage** | 128 GB SSD (10 GB free) | 256 GB NVMe SSD or larger |
 
-### 7.2. Software (Development)
+### 9.2. Software (Development)
 | Category | Software | Version/Type |
 | :--- | :--- | :--- |
 | **OS** | Windows, macOS, or Linux | Latest stable versions |
@@ -83,7 +139,7 @@ This project contributes to the following UN SDGs:
 | **Code Editor**| VS Code, WebStorm, etc. | Any modern IDE |
 | **Browser** | Chrome, Firefox, etc. | Latest stable versions |
 
-## 8. Project Setup and Installation
+## 10. Project Setup and Installation
 
 To run this project locally, follow these steps:
 
@@ -99,7 +155,7 @@ To run this project locally, follow these steps:
 
 3.  **View the Application:** Open your web browser and navigate to [http://localhost:9002](http://localhost:9002). The CampusFlow application should now be running.
 
-## 9. Project Structure
+## 11. Project Structure
 
 The project follows a standard Next.js App Router structure. Key directories include:
 
@@ -121,4 +177,3 @@ The project follows a standard Next.js App Router structure. Key directories inc
 - **/public/**: Static assets like images and fonts.
 - **tailwind.config.ts**: Configuration file for Tailwind CSS.
 - **next.config.ts**: Configuration file for Next.js.
-```
