@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from 'react';
@@ -25,9 +24,8 @@ import {
   Search, 
   Settings, 
   ShieldCheck, 
-  TrendingUp, 
-  Users,
-  UserPlus
+  UserPlus,
+  Users
 } from 'lucide-react';
 import Link from 'next/link';
 import { format, isFuture } from 'date-fns';
@@ -43,7 +41,7 @@ export default function DashboardPage() {
   }, []);
 
   if (!isClient || isLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading dashboard...</div>;
+    return <div className="flex h-[50vh] items-center justify-center text-muted-foreground">Loading dashboard...</div>;
   }
 
   if (!user) {
@@ -62,7 +60,7 @@ export default function DashboardPage() {
 
 function LandingHero() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-8">
+    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-12 py-12">
       <div className="space-y-4">
         <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl bg-gradient-to-r from-primary to-purple-600 text-transparent bg-clip-text">
           CampusFlow
@@ -79,7 +77,7 @@ function LandingHero() {
           <Link href="/signup">Create Account</Link>
         </Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 text-left max-w-5xl">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 text-left max-w-5xl w-full">
         <FeatureCard 
           icon={<Calendar className="text-primary" />} 
           title="Easy Booking" 
@@ -102,9 +100,9 @@ function LandingHero() {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
-        <div className="w-10 h-10 mb-2">{icon}</div>
+        <div className="w-10 h-10 mb-2 flex items-center justify-center bg-primary/10 rounded-lg">{icon}</div>
         <CardTitle className="text-lg">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
@@ -118,30 +116,30 @@ function StudentDashboard({ user }: { user: any }) {
   const nextClass = user.sectionId ? getSectionTimetable(user.sectionId).find(e => isFuture(new Date(e.startTime))) : null;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-20">
       <header>
         <h1 className="text-3xl font-bold">Welcome back, {user.fullName}!</h1>
         <p className="text-muted-foreground">Here's a look at your campus life today.</p>
       </header>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className="md:col-span-2">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Clock className="w-5 h-5 text-primary" /> Up Next</CardTitle>
           </CardHeader>
           <CardContent>
             {nextClass ? (
-              <div className="flex items-center justify-between p-4 border rounded-lg bg-primary/5 border-primary/20">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg bg-primary/5 border-primary/20 gap-4">
                 <div>
                   <p className="font-semibold text-lg">{nextClass.subjectName}</p>
                   <p className="text-sm text-muted-foreground">{format(new Date(nextClass.startTime), 'EEEE, h:mm a')} • Room {nextClass.roomId}</p>
                 </div>
-                <Button variant="ghost" asChild>
+                <Button variant="outline" asChild>
                   <Link href="/timetable">View Timetable <ArrowRight className="ml-2 h-4 w-4" /></Link>
                 </Button>
               </div>
             ) : (
-              <p className="text-muted-foreground">No more classes scheduled for today.</p>
+              <p className="text-muted-foreground py-4">No more classes scheduled for today.</p>
             )}
           </CardContent>
         </Card>
@@ -152,18 +150,18 @@ function StudentDashboard({ user }: { user: any }) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center text-sm">
-              <span>Upcoming Bookings</span>
-              <Badge>{upcoming.length}</Badge>
+              <span className="text-muted-foreground font-medium">Upcoming Bookings</span>
+              <Badge variant="secondary" className="px-2.5 py-0.5">{upcoming.length}</Badge>
             </div>
             <div className="flex justify-between items-center text-sm">
-              <span>Section</span>
-              <Badge variant="outline">{user.section || 'N/A'}</Badge>
+              <span className="text-muted-foreground font-medium">Current Section</span>
+              <Badge variant="outline" className="px-2.5 py-0.5">{user.section || 'N/A'}</Badge>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Recent Bookings</CardTitle>
@@ -176,9 +174,9 @@ function StudentDashboard({ user }: { user: any }) {
                     <p className="font-medium">{r.title}</p>
                     <p className="text-xs text-muted-foreground">{format(new Date(r.startTime), 'MMM d, h:mm a')}</p>
                   </div>
-                  <Button variant="outline" size="sm" asChild><Link href="/reservations">Details</Link></Button>
+                  <Button variant="ghost" size="sm" asChild><Link href="/reservations">Details</Link></Button>
                 </div>
-              )) : <p className="text-sm text-muted-foreground">You have no upcoming reservations.</p>}
+              )) : <p className="text-sm text-muted-foreground py-2">You have no upcoming reservations.</p>}
             </div>
           </CardContent>
         </Card>
@@ -188,16 +186,16 @@ function StudentDashboard({ user }: { user: any }) {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
-            <Button variant="secondary" className="h-20 flex flex-col gap-2" asChild>
+            <Button variant="secondary" className="h-24 flex flex-col gap-2 whitespace-normal text-center" asChild>
               <Link href="/resources">
                 <Search className="w-5 h-5" />
-                <span>Explore & Book</span>
+                <span>Explore & Book Resources</span>
               </Link>
             </Button>
-            <Button variant="secondary" className="h-20 flex flex-col gap-2" asChild>
+            <Button variant="secondary" className="h-24 flex flex-col gap-2 whitespace-normal text-center" asChild>
               <Link href="/timetable">
                 <Calendar className="w-5 h-5" />
-                <span>View Schedule</span>
+                <span>View Full Schedule</span>
               </Link>
             </Button>
           </CardContent>
@@ -213,21 +211,21 @@ function FacultyDashboard({ user }: { user: any }) {
   const facultyBookings = allB.filter(b => b.userId === user.id);
   
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-20">
       <header>
-        <h1 className="text-3xl font-bold">Faculty Portal: {user.fullName}</h1>
-        <p className="text-muted-foreground">Manage your classes and resources.</p>
+        <h1 className="text-3xl font-bold">Faculty Portal</h1>
+        <p className="text-muted-foreground">Logged in as {user.fullName} ({user.department})</p>
       </header>
 
-      <div className="grid gap-6 md:grid-cols-4">
-        <Card className="md:col-span-3">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-4">
+        <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle>Resource Utilization</CardTitle>
-            <CardDescription>Track your booked lab and auditorium hours.</CardDescription>
+            <CardDescription>Estimated hours utilized in campus facilities this week.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[200px] w-full">
-              <ChartRoot config={{ total: { label: 'Hours', color: 'hsl(var(--primary))' } }}>
+            <div className="h-[250px] w-full">
+              <ChartRoot config={{ total: { label: 'Hours', color: 'hsl(var(--primary))' } }} className="h-full w-full aspect-auto">
                 <ChartBarRoot data={[
                   { name: 'Mon', total: 4 },
                   { name: 'Tue', total: 6 },
@@ -246,7 +244,7 @@ function FacultyDashboard({ user }: { user: any }) {
           </CardContent>
         </Card>
 
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-1">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">My Bookings</CardTitle>
@@ -258,16 +256,17 @@ function FacultyDashboard({ user }: { user: any }) {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Department</CardTitle>
+              <CardTitle className="text-sm font-medium">Academic Role</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-sm font-semibold">{user.department}</div>
+              <div className="text-sm font-semibold">{user.jobTitle || 'Faculty Member'}</div>
+              <p className="text-xs text-muted-foreground truncate">{user.department}</p>
             </CardContent>
           </Card>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>My Reserved Equipment/Spaces</CardTitle>
@@ -292,17 +291,17 @@ function FacultyDashboard({ user }: { user: any }) {
             <CardTitle>Faculty Resources</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full justify-start" asChild>
+            <Button variant="outline" className="w-full justify-start h-12" asChild>
               <Link href="/resources">
                 <Plus className="mr-2 h-4 w-4" /> Book Research Lab
               </Link>
             </Button>
-            <Button variant="outline" className="w-full justify-start" asChild>
+            <Button variant="outline" className="w-full justify-start h-12" asChild>
               <Link href="/resources">
                 <Plus className="mr-2 h-4 w-4" /> Reserve Auditorium
               </Link>
             </Button>
-            <Button variant="outline" className="w-full justify-start" asChild>
+            <Button variant="outline" className="w-full justify-start h-12" asChild>
               <Link href="/timetable">
                 <Calendar className="mr-2 h-4 w-4" /> My Teaching Schedule
               </Link>
@@ -321,33 +320,33 @@ function AdminDashboard({ user }: { user: any }) {
   const totalUsers = allUsers.length;
 
   return (
-    <div className="space-y-8">
-      <header className="flex justify-between items-end">
+    <div className="space-y-8 pb-20">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <h1 className="text-3xl font-bold">Admin Command Center</h1>
-          <p className="text-muted-foreground">System overview and administrative controls.</p>
+          <p className="text-muted-foreground">System wide overview and administrative controls.</p>
         </div>
         <Button asChild>
           <Link href="/admin/settings"><Settings className="mr-2 h-4 w-4" /> System Settings</Link>
         </Button>
       </header>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard title="Total Users" value={totalUsers} icon={<Users className="w-4 h-4" />} color="text-blue-600" />
         <StatsCard title="Total Resources" value={totalResources} icon={<LayoutDashboard className="w-4 h-4" />} color="text-green-600" />
         <StatsCard title="Total Bookings" value={totalBookings} icon={<CheckCircle2 className="w-4 h-4" />} color="text-purple-600" />
         <StatsCard title="Pending Approvals" value={pendingUsers.length} icon={<UserPlus className="w-4 h-4" />} color="text-orange-600" />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle>Recent Booking Activity</CardTitle>
             <CardDescription>Overview of the latest system interactions.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[200px] w-full">
-              <ChartRoot config={{ bookings: { label: 'Bookings', color: 'hsl(var(--chart-2))' } }}>
+              <ChartRoot config={{ bookings: { label: 'Bookings', color: 'hsl(var(--chart-2))' } }} className="h-full w-full aspect-auto">
                 <ChartBarRoot data={[
                   { name: '01/05', bookings: 12 },
                   { name: '02/05', bookings: 18 },
@@ -369,7 +368,7 @@ function AdminDashboard({ user }: { user: any }) {
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle>Pending Approvals</CardTitle>
+              <CardTitle>New Registration Requests</CardTitle>
               <Button variant="link" asChild><Link href="/admin/approvals">View All</Link></Button>
             </div>
           </CardHeader>
@@ -378,13 +377,13 @@ function AdminDashboard({ user }: { user: any }) {
               {pendingUsers.length > 0 ? pendingUsers.slice(0, 4).map(u => (
                 <div key={u.id} className="flex items-center justify-between p-3 border rounded-md">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold">{u.fullName?.[0]}</div>
+                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">{u.fullName?.[0]}</div>
                     <div>
                       <p className="text-sm font-medium">{u.fullName}</p>
                       <p className="text-xs text-muted-foreground capitalize">{u.role} • {u.department}</p>
                     </div>
                   </div>
-                  <Button size="sm" variant="ghost" asChild><Link href="/admin/approvals"><ArrowRight className="w-4 h-4" /></Link></Button>
+                  <Button size="icon" variant="ghost" asChild><Link href="/admin/approvals"><ArrowRight className="w-4 h-4" /></Link></Button>
                 </div>
               )) : <div className="text-center py-8">
                     <CheckCircle2 className="w-12 h-12 text-muted/30 mx-auto mb-2" />
@@ -395,28 +394,28 @@ function AdminDashboard({ user }: { user: any }) {
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
         <Card className="hover:bg-muted/50 transition-colors">
           <Link href="/admin">
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2"><ShieldCheck className="w-5 h-5" /> Manage Resources</CardTitle>
-              <CardDescription>Add, edit, or delete campus facilities.</CardDescription>
+              <CardTitle className="text-lg flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-primary" /> Manage Resources</CardTitle>
+              <CardDescription>Inventory control for all campus facilities.</CardDescription>
             </CardHeader>
           </Link>
         </Card>
         <Card className="hover:bg-muted/50 transition-colors">
           <Link href="/admin/sections">
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2"><GraduationCap className="w-5 h-5" /> Academic Sections</CardTitle>
-              <CardDescription>Configure departments, years, and class sections.</CardDescription>
+              <CardTitle className="text-lg flex items-center gap-2"><GraduationCap className="w-5 h-5 text-primary" /> Academic Sections</CardTitle>
+              <CardDescription>Manage departments, years, and student groups.</CardDescription>
             </CardHeader>
           </Link>
         </Card>
         <Card className="hover:bg-muted/50 transition-colors">
-          <Link href="/admin/settings">
+          <Link href="/admin/approvals">
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2"><Settings className="w-5 h-5" /> Global Settings</CardTitle>
-              <CardDescription>System maintenance and global policies.</CardDescription>
+              <CardTitle className="text-lg flex items-center gap-2"><UserPlus className="w-5 h-5 text-primary" /> Pending Requests</CardTitle>
+              <CardDescription>Approve or deny new user registrations.</CardDescription>
             </CardHeader>
           </Link>
         </Card>
