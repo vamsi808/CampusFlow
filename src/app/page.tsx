@@ -24,11 +24,14 @@ export default function ResourceBrowserPage() {
   }, []);
 
   const availableResources = React.useMemo(() => {
+    // If we are on the server or in the hydration phase, return empty to match server state.
+    if (!isClient) return [];
+    
     if (!user) {
       return allResources.filter(resource => resource.resourceFor === 'student');
     }
     return allResources.filter(resource => resource.resourceFor === user.role);
-  }, [user]);
+  }, [user, isClient]);
 
   const filteredResources = React.useMemo(() => {
     return availableResources.filter(resource => {
@@ -40,8 +43,8 @@ export default function ResourceBrowserPage() {
     });
   }, [searchTerm, typeFilter, locationFilter, capacityFilter, availableResources]);
 
-  const uniqueTypes = [...new Set(availableResources.map(r => r.type))];
-  const uniqueLocations = [...new Set(availableResources.map(r => r.location))];
+  const uniqueTypes = React.useMemo(() => [...new Set(availableResources.map(r => r.type))], [availableResources]);
+  const uniqueLocations = React.useMemo(() => [...new Set(availableResources.map(r => r.location))], [availableResources]);
 
   return (
     <div className="space-y-8">

@@ -1,3 +1,7 @@
+
+"use client";
+
+import * as React from 'react';
 import {
   Table,
   TableBody,
@@ -15,14 +19,41 @@ import { isPast } from "date-fns";
 import Link from "next/link";
 import { MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useAuth } from '@/hooks/use-auth';
 
 export default function ReservationsPage() {
-  // In a real app, you would get the current user's ID and filter reservations.
-  // For this example, we'll just show all bookings for simplicity in this view.
-  const reservationsWithDetails = allBookings.map(res => {
-    const resource = allResources.find(r => r.id === res.resourceId);
-    return { ...res, resourceName: resource?.name || "Unknown Resource" };
-  });
+  const { user } = useAuth();
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const reservationsWithDetails = React.useMemo(() => {
+    if (!isClient) return [];
+    
+    // Filter by the current user's ID or session
+    const bookings = user ? allBookings.filter(b => b.userId === user.id || b.userId === 'currentUser') : [];
+    
+    return bookings.map(res => {
+      const resource = allResources.find(r => r.id === res.resourceId);
+      return { ...res, resourceName: resource?.name || "Unknown Resource" };
+    });
+  }, [user, isClient]);
+
+  if (!isClient) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>My Reservations</CardTitle>
+          <CardDescription>Loading your bookings...</CardDescription>
+        </CardHeader>
+        <CardContent className="h-24 flex items-center justify-center">
+          <div className="animate-pulse bg-muted h-8 w-full rounded" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -78,7 +109,11 @@ export default function ReservationsPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center">
-                    You have no reservations. <Link href="/" className="text-primary hover:underline">Browse resources</Link>.
+                    {user ? (
+                      <>You have no reservations. <Link href="/" className="text-primary hover:underline">Browse resources</Link>.</>
+                    ) : (
+                      <>Please <Link href="/login" className="text-primary hover:underline">log in</Link> to view your reservations.</>
+                    )}
                   </TableCell>
                 </TableRow>
               )}

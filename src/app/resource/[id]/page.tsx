@@ -1,3 +1,7 @@
+
+"use client";
+
+import * as React from 'react';
 import { allResources } from '@/lib/data';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -5,18 +9,46 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Users, MapPin, Info } from 'lucide-react';
 import { ScheduleViewer } from '@/components/schedule-viewer';
+import { use } from 'react';
 
 interface ResourcePageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function ResourcePage({ params }: ResourcePageProps) {
-  const resource = allResources.find((r) => r.id === params.id);
+  const resolvedParams = use(params);
+  const [isClient, setIsClient] = React.useState(false);
 
-  if (!resource) {
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Use memo to find resource so it's consistent during hydration
+  const resource = React.useMemo(() => {
+    if (!isClient) return null;
+    return allResources.find((r) => r.id === resolvedParams.id);
+  }, [resolvedParams.id, isClient]);
+
+  // Handle case where it's not found after hydration
+  if (isClient && !resource) {
     notFound();
+  }
+
+  // Initial skeleton render for server and hydration phase
+  if (!isClient || !resource) {
+    return (
+      <div className="grid md:grid-cols-3 gap-8 animate-pulse">
+        <div className="md:col-span-1 space-y-6">
+          <div className="h-64 bg-muted rounded-lg" />
+          <div className="h-32 bg-muted rounded-lg" />
+        </div>
+        <div className="md:col-span-2">
+          <div className="h-96 bg-muted rounded-lg" />
+        </div>
+      </div>
+    );
   }
 
   return (
