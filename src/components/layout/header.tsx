@@ -16,6 +16,8 @@ import {
   UserCheck,
   Calendar as CalendarIcon,
   Users2,
+  LayoutDashboard,
+  Search,
 } from 'lucide-react';
 
 import {
@@ -44,7 +46,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { useAuth } from '@/hooks/use-auth';
 
 const navLinks = [
-  { href: '/', label: 'Dashboard', icon: Home },
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/resources', label: 'Explore', icon: Search },
   { href: '/reservations', label: 'My Reservations', icon: CalendarDays },
   { href: '/timetable', label: 'Timetable', icon: CalendarIcon },
 ];
