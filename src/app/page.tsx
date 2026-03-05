@@ -26,10 +26,11 @@ import {
   Settings, 
   ShieldCheck, 
   TrendingUp, 
-  Users 
+  Users,
+  UserPlus
 } from 'lucide-react';
 import Link from 'next/link';
-import { format, isFuture, isPast } from 'date-fns';
+import { format, isFuture } from 'date-fns';
 import { ChartRoot, ChartBarRoot, ChartGrid, ChartXAxis, ChartYAxis, ChartTooltip, ChartTooltipContent, ChartBar } from '@/components/ui/chart';
 import { AssistantPanel } from '@/components/assistant-panel';
 
@@ -190,12 +191,12 @@ function StudentDashboard({ user }: { user: any }) {
             <Button variant="secondary" className="h-20 flex flex-col gap-2" asChild>
               <Link href="/resources">
                 <Search className="w-5 h-5" />
-                <span>Book a Room</span>
+                <span>Explore & Book</span>
               </Link>
             </Button>
             <Button variant="secondary" className="h-20 flex flex-col gap-2" asChild>
               <Link href="/timetable">
-                <CalendarIcon className="w-5 h-5" />
+                <Calendar className="w-5 h-5" />
                 <span>View Schedule</span>
               </Link>
             </Button>
@@ -303,7 +304,7 @@ function FacultyDashboard({ user }: { user: any }) {
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link href="/timetable">
-                <CalendarIcon className="mr-2 h-4 w-4" /> My Teaching Schedule
+                <Calendar className="mr-2 h-4 w-4" /> My Teaching Schedule
               </Link>
             </Button>
           </CardContent>
